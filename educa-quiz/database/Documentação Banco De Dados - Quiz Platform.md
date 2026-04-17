@@ -14,8 +14,10 @@ Este documento descreve a estrutura do banco de dados MySQL utilizado pela aplic
 | username  |       | title     |       | user_id FK  |
 | email     |       | difficulty|       | quiz_id FK  |
 | password  |       | created_at|       | score       |
-| created_at|       +-----------+       | created_at  |
-+-----------+             |             +-------------+
+|profile_img|       +-----------+       | created_at  |
+| backgr_img|             |             +-------------+
+| created_at|             |              
++-----------+             |             
       |                   |
       |                   v
       |             +-------------+
@@ -60,6 +62,8 @@ Armazena informações dos usuários do sistema.
 | username      | VARCHAR(50)  | Nome do usuário                | NOT NULL, UNIQUE          |
 | email         | VARCHAR(100) | Email do usuário               | NOT NULL, UNIQUE          |
 | password_hash | VARCHAR(255) | Senha do usuário (hash)        | NOT NULL                  |
+| profile_image | VARCHAR(255) | Caminho ou URL                 | NOT NULL                  |
+|background_image|VARCHAR(255) | Caminho ou URL                 | NOT NULL                  |
 | created_at    | DATETIME     | Data de criação                | DEFAULT CURRENT_TIMESTAMP |
 
 #### Índices
@@ -198,6 +202,8 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    profile_image VARCHAR(255),    -- Nova coluna
+    background_image VARCHAR(255), -- Nova coluna
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
