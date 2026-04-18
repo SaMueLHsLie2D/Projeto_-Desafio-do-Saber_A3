@@ -1,6 +1,11 @@
 using backend_dotnet.Data;
 using Microsoft.EntityFrameworkCore;
 
+var options = new WebApplicationOptions
+{
+    WebRootPath = "wwwroot"
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -12,7 +17,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
-builder.WebHost.UseWebRoot("wwwroot");
 
 var app = builder.Build();
 
