@@ -19,6 +19,10 @@ namespace backend_dotnet.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Quiz>()
+                .Property(q => q.Difficulty)
+                .HasColumnType("ENUM('easy','medium','hard')");
+
             
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
