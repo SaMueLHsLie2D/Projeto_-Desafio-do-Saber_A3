@@ -204,7 +204,10 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     profile_image VARCHAR(255),    -- Nova coluna
     background_image VARCHAR(255), -- Nova coluna
+    background_color VARCHAR(20),  
+    avatar_id INT, 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    FOREIGN KEY (avatar_id) REFERENCES avatars(id)
 );
 
 CREATE TABLE quizzes (
@@ -245,6 +248,11 @@ CREATE TABLE leaderboard (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+CREATE TABLE avatars (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    image_url VARCHAR(255)
+
 ```
 
 ---
