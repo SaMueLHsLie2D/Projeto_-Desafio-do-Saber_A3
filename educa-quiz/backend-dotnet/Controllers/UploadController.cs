@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using backend_dotnet.Data;
 using backend_dotnet.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using backend_dotnet.Dtos;
 
 // Controlador para upload de imagens de perfil
 // Rota: POST /api/upload/profile/{userId}
@@ -53,5 +56,22 @@ namespace backend_dotnet.Controllers
 
             return Ok(new { path = relativePath });
         }
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+              return NotFound();
+              user.AvatarId = dto.AvatarId;
+              user.BackgroundColor = dto.BackgroundColor;
+              
+              await _context.SaveChangesAsync();
+              return Ok(user);
+
+        }
+
     }
 }

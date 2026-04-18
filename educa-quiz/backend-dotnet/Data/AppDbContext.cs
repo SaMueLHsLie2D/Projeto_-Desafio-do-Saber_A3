@@ -19,20 +19,59 @@ namespace backend_dotnet.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Índice único para Username
+            modelBuilder.Entity<Quiz>()
+                .Property(q => q.Difficulty)
+                .HasColumnType("ENUM('easy','medium','hard')");
+
+            
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-
-            // Índice único para Email
+            
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-            // Enum Difficulty como string
+             modelBuilder.Entity<User>()
+                .HasOne(u => u.Avatar)
+                .WithMany(a => a.Users)
+                .HasForeignKey(u => u.AvatarId);
+            
+            modelBuilder.Entity<Question>()
+                .HasOne(q => q.Quiz)
+                .WithMany(z => z.Questions)
+                .HasForeignKey(q => q.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            modelBuilder.Entity<Answer>()
+                .HasOne(a => a.Question)
+                .WithMany(q => q.Answers)
+                .HasForeignKey(a => a.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            modelBuilder.Entity<Attempt>()
+                .HasOne(at => at.User)
+                .WithMany(u => u.Attempts)
+                .HasForeignKey(at => at.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+             modelBuilder.Entity<Attempt>()
+                .HasOne(at => at.Quiz)
+                .WithMany(q => q.Attempts)
+                .HasForeignKey(at => at.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LeaderBoard>()
+                .HasOne(lb => lb.User)
+                .WithOne(u => u.LeaderBoard)
+                .HasForeignKey<LeaderBoard>(lb => lb.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+      
             modelBuilder.Entity<Quiz>()
                 .Property(q => q.Difficulty)
                 .HasConversion<string>();
+            
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

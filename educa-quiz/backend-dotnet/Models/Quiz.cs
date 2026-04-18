@@ -9,23 +9,23 @@ namespace backend_dotnet.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-
+        [Required, MaxLength(100)]
+        public string Title { get; set; }
         [Required]
-        [MaxLength(100)]
-        public string Title { get; set; } = string.Empty;
-
-        [Required]
-        [Column(TypeName = "varchar(20)")]
         public Difficulty Difficulty { get; set; }
-
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public ICollection<Question> Questions { get; set; }
+        public ICollection<Attempt> Attempts { get; set; }
+
     }
 
-    public enum Difficulty
-    {
-        Easy,
-        Medium,
-        Hard
-    }
+
+public enum Difficulty
+{
+    Easy,
+    Medium,
+    Hard
+}
+
+
 }

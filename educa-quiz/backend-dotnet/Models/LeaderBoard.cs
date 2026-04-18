@@ -8,10 +8,9 @@ namespace backend_dotnet.Models
     {
         [Key]
         [ForeignKey("User")]
-        public int User_Id { get; set; }
-
-        [ForeignKey("User_Id")]
-        public User? User { get; set; }
+        [Required]
+        public int UserId { get; set; }
+        public User User { get; set; }
 
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
