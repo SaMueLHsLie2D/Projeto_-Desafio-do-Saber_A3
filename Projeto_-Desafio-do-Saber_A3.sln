@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "educa-quiz", "educa-quiz", "{A1CB3C68-F336-BE62-EBEA-306E3E9DD845}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "backend-dotnet", "educa-quiz\backend-dotnet\backend-dotnet.csproj", "{9972E420-70A0-A892-121F-AED68EFDB291}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9972E420-70A0-A892-121F-AED68EFDB291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9972E420-70A0-A892-121F-AED68EFDB291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9972E420-70A0-A892-121F-AED68EFDB291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9972E420-70A0-A892-121F-AED68EFDB291}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9972E420-70A0-A892-121F-AED68EFDB291} = {A1CB3C68-F336-BE62-EBEA-306E3E9DD845}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0BD9C6C1-FC7E-458E-A5C6-F7A5FCDEB657}
+	EndGlobalSection
+EndGlobal

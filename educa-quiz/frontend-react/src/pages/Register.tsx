@@ -33,11 +33,24 @@ export default function Register() {
     <div>
       <h1>Cadastro</h1>
 
-      <div>
-        {avatars.map(a => (
-          <img key={a.id} src={`http://localhost:5000${a.image_url}`} onClick={() => setAvatarId(a.id)} />
-        ))}
-      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+  {avatars.map(a => (
+    <img 
+      key={a.id}
+      src={`http://localhost:5000${a.image_url}`}
+      onClick={() => setAvatarId(a.id)}
+      style={{
+        width: 80,
+        height: 80,
+        cursor: "pointer",
+        border: a.id === avatarId ? "3px solid blue" : "2px solid gray",
+        borderRadius: "50%",
+        transform: a.id === avatarId ? "scale(1.1)" : "scale(1)",
+        transition: "0.2s"
+      }}
+    />
+  ))}
+</div>
 
       <div>
         {colors.map(c => (
