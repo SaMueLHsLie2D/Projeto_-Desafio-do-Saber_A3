@@ -7,25 +7,21 @@ namespace backend_dotnet.Models
     public class Quiz
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required, MaxLength(100)]
+
+        [Required, MaxLength(150)]
         public string Title { get; set; }
-        [Required]
-        public Difficulty Difficulty { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public string Description { get; set; }
+
+        public int? CreatedBy { get; set; }
+        [ForeignKey("CreatedBy")]
+        public User Creator {get; set ;}
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime CreatedAt { get; set; } 
         public ICollection<Question> Questions { get; set; }
         public ICollection<Attempt> Attempts { get; set; }
 
     }
-
-
-public enum Difficulty
-{
-    Easy,
-    Medium,
-    Hard
-}
-
-
 }

@@ -10,7 +10,6 @@ namespace backend_dotnet.Models
     public class Avatar
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [MaxLength(100)]
         public string Name { get; set; }

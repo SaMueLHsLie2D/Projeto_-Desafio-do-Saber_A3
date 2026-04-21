@@ -16,18 +16,11 @@ namespace backend_dotnet.Data
         public DbSet<Attempt> Attempts { get; set; }
         public DbSet<LeaderBoard> LeaderBoards { get; set; }
         public DbSet<Avatar> Avatars { get; set; }
+        public DbSet<Color> Colors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Quiz>()
-                .Property(q => q.Difficulty)
-                .HasColumnType("ENUM('easy','medium','hard')");
 
-            
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
-            
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -35,7 +28,21 @@ namespace backend_dotnet.Data
              modelBuilder.Entity<User>()
                 .HasOne(u => u.Avatar)
                 .WithMany(a => a.Users)
-                .HasForeignKey(u => u.AvatarId);
+                .HasForeignKey(u => u.AvatarId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Color)
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.ColorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Quiz>()
+                .HasOne(q => q.Creator)
+                .WithMany(u => u.Quizzes)
+                .HasForeignKey(q => q.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+                 
             
             modelBuilder.Entity<Question>()
                 .HasOne(q => q.Quiz)
@@ -66,10 +73,6 @@ namespace backend_dotnet.Data
                 .WithOne(u => u.LeaderBoard)
                 .HasForeignKey<LeaderBoard>(lb => lb.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-      
-            modelBuilder.Entity<Quiz>()
-                .Property(q => q.Difficulty)
-                .HasConversion<string>();
             
             base.OnModelCreating(modelBuilder);
         }

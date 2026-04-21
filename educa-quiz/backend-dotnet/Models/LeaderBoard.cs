@@ -7,14 +7,11 @@ namespace backend_dotnet.Models
     public class LeaderBoard
     {
         [Key]
-        [ForeignKey("User")]
-        [Required]
+        public int Id {get; set; }
         public int UserId { get; set; }
+        [ForeignKey("UserId")]
         public User User { get; set; }
 
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-        [Required]
-        public int Total_Score { get; set; }
+        public int Total_Score { get; set; } = 0;
     }
 }

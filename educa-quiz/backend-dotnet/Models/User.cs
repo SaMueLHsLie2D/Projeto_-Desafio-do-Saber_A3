@@ -8,24 +8,33 @@ namespace backend_dotnet.Models
     public class User
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required, MaxLength(50)]
-        public string Username { get; set; }
-        [Required, MaxLength(100)]
-        public string Email { get; set; }
-        [Required, MaxLength(255)]
-        public string PasswordHash { get; set; }
-        [MaxLength(255)]
-        public string ProfileImage { get; set; }
-        [MaxLength(255)]
-        public string BackgroundImage { get; set; }
-        [MaxLength(20)]
-        public string BackgroundColor { get; set; }
 
-        public int? AvatarId { get; set; }
+        [Required, MaxLength(100)]
+        public string Name { get; set; }
+
+        [Required, MaxLength(150)]
+        public string Email { get; set; }
+
+        [Required, MaxLength(255)]
+        public string Password { get; set; }
+
+        public string AvatarId { get; set; }
+
+        [ForeignKey("AvatarId")]
         public Avatar Avatar { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public int ColorId {get ; set; }
+        [ForeignKey("ColorId")]
+        public Color Color {get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime CreatedAt { get; set; } 
+        
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime UpdateAt {get; set; } 
+
+        public ICollection<Quiz> Quizzes {get; set; }
         public ICollection<Attempt> Attempts { get; set; }
         public LeaderBoard LeaderBoard { get; set; }
 
