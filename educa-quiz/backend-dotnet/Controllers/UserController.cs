@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 namespace backend_dotnet.Controllers
 {
     [ApiController]
@@ -26,6 +27,20 @@ namespace backend_dotnet.Controllers
             {
                 return BadRequest("Email já cadastrado.");
             }
+
+            var avatarExists = await _context.Avatars.AnyAsync(a => a.Id == dto.AvatarId);
+            if (!avatarExists)
+            {
+                return BadRequest("Avatar inválido. Escolha um avatar existente.");
+            }
+
+            var colorExists = await _context.Colors.AnyAsync(c => c.Id == dto.ColorId);
+            if (!colorExists)
+            {
+                return BadRequest("Cor inválida. Escolha uma cor existente."); 
+            }
+
+
 
             string senhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
@@ -78,7 +93,16 @@ namespace backend_dotnet.Controllers
 
 
         }
-     
+
+        // Apenas testar se o token está funcionando enquanto nao tem o front-end
+        [Authorize]
+        [HttpGet("TesteAuth")]
+        public IActionResult TesteAuth()
+        {
+             return Ok(new { message = "Acesso autorizado" });
+        }
+
+
 
         
     }

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]!);
@@ -26,7 +28,6 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
-var key = Encoding.ASCII.GetBytes("sua_chave_secreta_super_segura");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -46,6 +47,8 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
+
 
 
 var app = builder.Build();
