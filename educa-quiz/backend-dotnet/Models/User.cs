@@ -22,6 +22,7 @@ namespace backend_dotnet.Models
         public string BackgroundImage { get; set; }
         [MaxLength(20)]
         public string BackgroundColor { get; set; }
+
         public int? AvatarId { get; set; }
         public Avatar Avatar { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
