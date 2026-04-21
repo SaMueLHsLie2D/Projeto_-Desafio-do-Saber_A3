@@ -62,11 +62,15 @@ namespace backend_dotnet.Controllers
 
         public async Task<IActionResult> Login(LoginDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            var user = await _context.Users.Include(u => u.Avatar).Include(u => u.Color).FirstOrDefaultAsync(u => u.Email == dto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             {
                return Unauthorized("Usuário ou senha inválidos.");
             }
+
+            var attempt = await _context.Attempts.FirstOrDefaultAsync(a => a.UserId == user.Id);
+            var score = attempt?.Score ?? 0;
+
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
@@ -89,8 +93,21 @@ namespace backend_dotnet.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             string jwt = tokenHandler.WriteToken(token);
 
-            return Ok(new {token = jwt });
+            var avatarUrl = user.Avatar != null 
+            ? $"{Request.Scheme}://{Request.Host}{user.Avatar.ImageUrl}" 
+            : "";
 
+
+            var response = new LoginResponseDto
+            {
+                Token = jwt,
+                Name = user.Name,
+                Avatar = avatarUrl,
+                Color = user.Color?.HexValue ?? "#000000",
+                Score = score
+            };
+
+            return Ok(response);
 
         }
 
