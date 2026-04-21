@@ -19,7 +19,7 @@ namespace backend_dotnet.Models
         [Required, MaxLength(255)]
         public string Password { get; set; }
 
-        public string AvatarId { get; set; }
+        public int AvatarId { get; set; }
 
         [ForeignKey("AvatarId")]
         public Avatar Avatar { get; set; }
