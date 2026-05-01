@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   const stored = localStorage.getItem("user");
   const user = stored ? JSON.parse(stored) : null;
 
@@ -13,9 +17,9 @@ export default function Dashboard() {
 
       <h2>Score: 0</h2>
 
-      <button>Quiz 1</button>
-      <button>Quiz 2</button>
-      <button>Quiz 3</button>
+      <button onClick={() => navigate("/quizzes")}>
+        Ver Quizzes
+      </button>
     </div>
   );
 }

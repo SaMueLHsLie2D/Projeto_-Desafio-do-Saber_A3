@@ -39,24 +39,9 @@ CREATE TABLE quizzes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
   description TEXT,
-  created_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES users(id)
-);
+  questions JSON NOT NULL,
 
-CREATE TABLE questions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  quiz_id INT NOT NULL,
-  question_text TEXT NOT NULL,
-  FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
-);
-
-CREATE TABLE answers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  question_id INT NOT NULL,
-  answer_text TEXT NOT NULL,
-  is_correct BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE attempts (

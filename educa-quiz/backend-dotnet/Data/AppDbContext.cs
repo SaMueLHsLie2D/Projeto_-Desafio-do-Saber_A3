@@ -10,4 +10,5 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Avatar> Avatars { get; set; }
     public DbSet<Color> Colors { get; set; }
+    public DbSet<Quiz> Quizzes { get; set; }
 }

@@ -1,5 +1,6 @@
 using backend_dotnet.Data;
 using Microsoft.EntityFrameworkCore;
+using backend_dotnet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 🔥 libera acesso do React
+// libera acesso do React
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -23,7 +24,15 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
+builder.Services.AddScoped<AvatarSeedService>();
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<AvatarSeedService>();
+    seeder.SeedAvatars();
+}
 
 app.UseCors("AllowAll");
 
@@ -32,6 +41,5 @@ app.UseSwaggerUI();
 
 app.MapControllers();
 
-app.Run();
-
 app.UseStaticFiles();
+app.Run();

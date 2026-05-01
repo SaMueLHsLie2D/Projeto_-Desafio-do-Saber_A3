@@ -105,47 +105,32 @@ CREATE TABLE quizzes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
   description TEXT,
-  created_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  questions JSON NOT NULL,
 
-  FOREIGN KEY (created_by) REFERENCES users(id)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
-
 ---
 
-## ❓ Tabela: questions
+-- 🧠 Exemplo de quiz com JSON
 
-```sql
-CREATE TABLE questions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  quiz_id INT NOT NULL,
-  question_text TEXT NOT NULL,
-
-  FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
+INSERT INTO quizzes (title, description, questions) VALUES
+(
+  'Conhecimentos Gerais',
+  'Quiz básico para teste',
+  '[
+    {
+      "question": "Capital do Brasil?",
+      "options": ["São Paulo", "Rio de Janeiro", "Brasília", "Belo Horizonte"],
+      "correct": 2
+    },
+    {
+      "question": "2 + 2?",
+      "options": ["3", "4", "5", "6"],
+      "correct": 1
+    }
+  ]'
 );
-```
-
----
-
-## ✅ Tabela: answers
-
-```sql
-CREATE TABLE answers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  question_id INT NOT NULL,
-  answer_text TEXT NOT NULL,
-  is_correct BOOLEAN DEFAULT FALSE,
-
-  FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
-);
-```
-
-### 📌 Regra de negócio
-
-* Cada pergunta deve ter **4 respostas**
-* Apenas **1 resposta correta**
-* ⚠️ Essa validação deve ser feita no backend
 
 ---
 
