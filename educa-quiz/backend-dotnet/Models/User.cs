@@ -1,16 +1,43 @@
-namespace backend_dotnet.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using SeuProjeto.Models;
 
-public class User
+namespace backend_dotnet.Models
 {
-    public int Id { get; set; }
+    public class User
+    {
+        [Key]
+        public int Id { get; set; }
 
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string Password { get; set; }
+        [Required, MaxLength(100)]
+        public string Name { get; set; }
 
-    public int AvatarId { get; set; }
-    public Avatar Avatar { get; set; }
+        [Required, MaxLength(150)]
+        public string Email { get; set; }
 
-    public int ColorId { get; set; }
-    public Color Color { get; set; }
+        [Required, MaxLength(255)]
+        public string Password { get; set; }
+
+        public int AvatarId { get; set; }
+
+        [ForeignKey("AvatarId")]
+        public Avatar Avatar { get; set; }
+
+        public int ColorId {get ; set; }
+        [ForeignKey("ColorId")]
+        public Color Color {get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime CreatedAt { get; set; } 
+        
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime UpdateAt {get; set; } 
+
+        public ICollection<Quiz> Quizzes {get; set; }
+        public ICollection<Attempt> Attempts { get; set; }
+        public LeaderBoard LeaderBoard { get; set; }
+
+    }
 }
