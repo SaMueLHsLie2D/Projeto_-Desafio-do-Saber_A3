@@ -29,15 +29,12 @@ namespace backend_dotnet.Models
         [ForeignKey("ColorId")]
         public Color Color {get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public DateTime CreatedAt { get; set; } 
         
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime CreatedAt { get; set; }   
         public DateTime UpdateAt {get; set; } 
 
-        public ICollection<Quiz> Quizzes {get; set; }
         public ICollection<Attempt> Attempts { get; set; }
-        public LeaderBoard LeaderBoard { get; set; }
+        public Leaderboard Leaderboard { get; set; }
 
     }
 }

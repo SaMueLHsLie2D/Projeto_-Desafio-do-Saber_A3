@@ -3,6 +3,7 @@ using backend_dotnet.Data;
 using backend_dotnet.Models;
 using backend_dotnet.DTOs;
 using System.Text.Json;
+using SeuProjeto.Models;
 
 namespace backend_dotnet.Controllers;
 

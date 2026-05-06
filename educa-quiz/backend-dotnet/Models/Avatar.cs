@@ -11,11 +11,15 @@ namespace backend_dotnet.Models
     {
         [Key]
         public int Id { get; set; }
+
+        [Required]
         [MaxLength(100)]
         public string Name { get; set; }
+        
+        [Required]
         [MaxLength(255)]
         public string ImageUrl { get; set; }
-        public ICollection<User> Users { get; set; }
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
     
 } 
