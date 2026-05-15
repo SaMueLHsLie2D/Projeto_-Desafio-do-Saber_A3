@@ -12,8 +12,8 @@ using backend_dotnet.Data;
 namespace backenddotnet.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260506224601_CriandoDB")]
-    partial class CriandoDB
+    [Migration("20260515205213_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -105,6 +105,9 @@ namespace backenddotnet.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<int>("RequiredValue")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -130,6 +133,9 @@ namespace backenddotnet.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<int>("RequiredValue")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

@@ -102,6 +102,9 @@ namespace backenddotnet.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<int>("RequiredValue")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -127,6 +130,9 @@ namespace backenddotnet.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<int>("RequiredValue")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

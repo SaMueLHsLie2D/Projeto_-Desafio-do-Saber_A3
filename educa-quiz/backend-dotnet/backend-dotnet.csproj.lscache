@@ -65,8 +65,8 @@ DTOs/
  LoginDto.cs
  LoginResponseDto.cs
 Migrations/
- 20260506224601_CriandoDB.cs
- 20260506224601_CriandoDB.Designer.cs
+ 20260515205213_InitialCreate.cs
+ 20260515205213_InitialCreate.Designer.cs
  AppDbContextModelSnapshot.cs
 Models/
  Attempt.cs

@@ -55,6 +55,8 @@ public class AvatarSeedService
             }
         }
 
+        // deleta os avatrs que nao existem mais na pasta
+
         var existingAvatars = _context.Avatars.ToList();
         foreach (var avatar in existingAvatars)
         {
