@@ -10,14 +10,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using backend_dotnet.DTOs;
+using backend_dotnet.Services;
 namespace backend_dotnet.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserController(AppDbContext context, IConfiguration configuration) : ControllerBase
+    public class UserController(AppDbContext context,  TokenService tokenService) : ControllerBase
     {
         public readonly AppDbContext _context = context;
-        private readonly IConfiguration _configuration = configuration;
+        private readonly TokenService _tokenService = tokenService;
 
         [HttpPost("Cadastro")]
         public async Task<IActionResult> Cadastro(CadastroDto dto)
@@ -72,27 +73,8 @@ namespace backend_dotnet.Controllers
             var attempt = await _context.Attempts.FirstOrDefaultAsync(a => a.UserId == user.Id);
             var score = attempt?.Score ?? 0;
 
+            var jwt = _tokenService.GenerateToken(user);
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email)
-                }),
-                Expires = DateTime.UtcNow.AddHours(2),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                )
-                
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            string jwt = tokenHandler.WriteToken(token);
 
             var avatarUrl = user.Avatar != null 
             ? $"{Request.Scheme}://{Request.Host}{user.Avatar.ImageUrl}" 

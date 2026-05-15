@@ -14,6 +14,9 @@ namespace backend_dotnet.Models
         [Required]
         [MaxLength(20)]
         public string HexValue { get; set; }
+
+        [Required]
+        public int RequiredValue { get; set; }
         public ICollection<User> Users { get; set; } = new List<User>();
         
     }

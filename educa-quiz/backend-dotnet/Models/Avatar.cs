@@ -19,6 +19,9 @@ namespace backend_dotnet.Models
         [Required]
         [MaxLength(255)]
         public string ImageUrl { get; set; }
+
+        [Required]
+        public int RequiredValue { get; set; }
         public ICollection<User> Users { get; set; } = new List<User>();
     }
     
