@@ -26,37 +26,48 @@ public class QuizController : ControllerBase
         return Ok(quizzes);
     }
 
-    // PEGAR UM
-    [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    [HttpGet("quiz/{title}/{description}")]
+    public IActionResult GetRandomQuestions(string title, string description, int count = 5)
     {
-        var quiz = _context.Quizzes.FirstOrDefault(q => q.Id == id);
+        var quiz = _context.Quizzes.FirstOrDefault(q => q.Title == title && q.Description == description);
 
         if (quiz == null)
-            return NotFound();
-
-        // converte JSON antes de enviar
-        var parsedQuestions = JsonSerializer.Deserialize<object>(quiz.Questions);
-
-        return Ok(new
         {
-            quiz.Id,
-            quiz.Title,
-            quiz.Description,
-            questions = parsedQuestions
-        });
+            return NotFound("Quiz não encontrado.");
+        }
+
+        // Converte a string JSON de volta para uma lista de perguntas
+        var questions = JsonSerializer.Deserialize<List<QuestionDto>>(quiz.Questions);
+
+        if (questions == null || questions.Count == 0)
+        {
+            return NotFound("Nenhuma pergunta encontrada para este quiz.");
+        }
+
+        var random = new Random();
+        var randomQuestions = questions.OrderBy(q => random.Next()).Take(count).ToList();
+
+        return Ok(randomQuestions);
+
+       
     }
+
+
 
     // CRIAR QUIZ
     [HttpPost]
     public IActionResult Create(CreateQuizDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+     
+
         var quiz = new Quiz
         {
             Title = dto.Title,
             Description = dto.Description,
-
-            // transforma objeto em string JSON
             Questions = JsonSerializer.Serialize(dto.Questions),
             CreatedAt = DateTime.Now
         };

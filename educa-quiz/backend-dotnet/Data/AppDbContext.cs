@@ -51,6 +51,12 @@ namespace backend_dotnet.Data
                 .HasColumnType("TIMESTAMP")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+            modelBuilder.Entity<Quiz>()
+                .Property(q => q.Questions)
+                .HasColumnType("JSON")
+                .IsRequired();
+
+
             modelBuilder.Entity<Attempt>()
                 .HasOne(at => at.User)
                 .WithMany(u => u.Attempts)
@@ -78,7 +84,15 @@ namespace backend_dotnet.Data
                 .Property(lb => lb.TotalScore)
                 .HasDefaultValue(0);
 
-            // Agora com unicidade nos nomes
+            modelBuilder.Entity<Avatar>()
+                .Property(a => a.RequiredValue)
+                .HasDefaultValue(0);
+
+            modelBuilder.Entity<Color>()
+                .Property(c => c.RequiredValue)
+                .HasDefaultValue(0);
+
+
             modelBuilder.Entity<Avatar>()
                 .HasIndex(a => a.Name)
                 .IsUnique();

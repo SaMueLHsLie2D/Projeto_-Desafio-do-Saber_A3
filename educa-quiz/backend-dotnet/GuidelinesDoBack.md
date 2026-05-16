@@ -98,9 +98,11 @@ wwwroot/avatars/
 * Gera URL automaticamente:
 
 ```text
-/avatars/nome.png
+/avatars/nome_100.png
 ```
 
+* lógica para extrair o valor necessário do nome do arquivo, por exemplo: avatar_100.png -> requiredValue = 100
+            if (!_context.Avatars.Any(a => a.ImageUrl == imageUrl))
 * Insere no banco se não existir
 
 ## Regras
@@ -251,7 +253,7 @@ app.MapControllers();
 Usar Swagger:
 
 ```text
-http://localhost:5000/swagger
+http://localhost:5200/swagger
 ```
 
 ---
