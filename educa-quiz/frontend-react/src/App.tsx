@@ -4,7 +4,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Quizzes from "./pages/Quizzes";
-import QuizPlay from "./pages/QuizPlay";
+import RecycleGame from "./pages/RecycleGame";
+
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const user = localStorage.getItem("user");
@@ -39,15 +40,7 @@ export default function App() {
           }
         />
 
-        <Route
-          path="/quiz/:id"
-          element={
-            <PrivateRoute>
-              <QuizPlay />
-            </PrivateRoute>
-          }
-        />
-
+        <Route path="/reciclagem" element={<RecycleGame />} />
       </Routes>
     </BrowserRouter>
   );

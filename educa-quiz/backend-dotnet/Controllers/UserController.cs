@@ -30,20 +30,6 @@ namespace backend_dotnet.Controllers
                 return BadRequest("Email já cadastrado.");
             }
 
-            var avatarExists = await _context.Avatars.AnyAsync(a => a.Id == dto.AvatarId);
-            if (!avatarExists)
-            {
-                return BadRequest("Avatar inválido. Escolha um avatar existente.");
-            }
-
-            var colorExists = await _context.Colors.AnyAsync(c => c.Id == dto.ColorId);
-            if (!colorExists)
-            {
-                return BadRequest("Cor inválida. Escolha uma cor existente."); 
-            }
-
-
-
             string senhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
             var user = new User
@@ -51,8 +37,8 @@ namespace backend_dotnet.Controllers
                 Name = dto.Name,
                 Email = dto.Email,
                 Password = senhaHash,
-                AvatarId = dto.AvatarId,
-                ColorId = dto.ColorId
+                AvatarId = 1, // Definindo um avatar padrão (pode ser alterado posteriormente)
+                ColorId = 1
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();

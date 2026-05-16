@@ -50,6 +50,8 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddScoped<AvatarSeedService>();
+builder.Services.AddScoped<TokenService>();
+
 
 var app = builder.Build();
 

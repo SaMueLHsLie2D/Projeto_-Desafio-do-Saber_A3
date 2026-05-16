@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -11,15 +12,20 @@ export default function Dashboard() {
   return (
     <div>
       <div style={{ backgroundColor: user.color, height: 120 }}>
-        <img src={`http://localhost:5000${user.avatar}`} />
+        <img src={user.avatar} alt="Avatar" />
         <h2>{user.name}</h2>
       </div>
 
       <h2>Score: 0</h2>
 
-      <button onClick={() => navigate("/quizzes")}>
-        Ver Quizzes
-      </button>
+      <div style={{ display: "flex", gap: "15px", marginTop: "20px" }}>
+        <button onClick={() => navigate("/quizzes")}>
+          Ver Quizzes
+        </button>
+        <button onClick={() => navigate("/reciclagem")}>
+          ♻️ Jogo da Reciclagem
+        </button>
+      </div>
     </div>
   );
 }

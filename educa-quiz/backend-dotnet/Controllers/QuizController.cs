@@ -4,6 +4,7 @@ using backend_dotnet.Models;
 using backend_dotnet.DTOs;
 using System.Text.Json;
 using SeuProjeto.Models;
+using System.Text;
 
 namespace backend_dotnet.Controllers;
 
@@ -26,10 +27,13 @@ public class QuizController : ControllerBase
         return Ok(quizzes);
     }
 
-    [HttpGet("quiz/{title}/{description}")]
+    [HttpGet("{title}/{description}")]
     public IActionResult GetRandomQuestions(string title, string description, int count = 5)
     {
-        var quiz = _context.Quizzes.FirstOrDefault(q => q.Title == title && q.Description == description);
+        var quiz = _context.Quizzes.FirstOrDefault(q =>
+            q.Title.ToLower() == title.ToLower() &&
+            q.Description.ToLower() == description.ToLower());
+
 
         if (quiz == null)
         {
@@ -37,7 +41,7 @@ public class QuizController : ControllerBase
         }
 
         // Converte a string JSON de volta para uma lista de perguntas
-        var questions = JsonSerializer.Deserialize<List<QuestionDto>>(quiz.Questions);
+        var questions = JsonSerializer.Deserialize<List<QuestionDto>>(quiz.Questions, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (questions == null || questions.Count == 0)
         {
