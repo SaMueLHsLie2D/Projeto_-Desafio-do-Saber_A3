@@ -1,4 +1,3 @@
-
 using backend_dotnet.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,24 +19,25 @@ public class RankingController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRanking()
     {
-        // Busca todos os usuários ordenados por pontuação
         var allUsers = await _context.Leaderboards
             .Include(l => l.User)
+                .ThenInclude(u => u.Avatar) // garante que o Avatar é carregado
             .OrderByDescending(l => l.TotalScore)
             .Select(l => new
             {
                 l.UserId,
-                Name = l.User.Name,
-                Avatar = l.User.Avatar,   // ajuste para o nome do campo no seu modelo
+                Name     = l.User.Name,
+                // Troque "ImageUrl" pelo nome real da propriedade de URL no seu model Avatar
+                // Opções comuns: ImageUrl, Url, Path, FilePath, AvatarUrl
+                Avatar   = l.User.Avatar != null ? l.User.Avatar.ImageUrl : null,
                 TotalScore = l.TotalScore
             })
             .ToListAsync();
 
-        // Atribui posições
         var ranked = allUsers
             .Select((u, index) => new
             {
-                Position = index + 1,
+                Position   = index + 1,
                 u.UserId,
                 u.Name,
                 u.Avatar,
@@ -45,10 +45,8 @@ public class RankingController : ControllerBase
             })
             .ToList();
 
-        // Top 5
         var top5 = ranked.Take(5).ToList();
 
-        // Posição do usuário logado
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         object? currentUser = null;
 

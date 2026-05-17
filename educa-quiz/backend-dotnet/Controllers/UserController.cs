@@ -165,6 +165,42 @@ public async Task<IActionResult> EquiparColor([FromBody] EquiparColorDto dto)
     return Ok(new { message = "Cor equipada com sucesso!" });
 }
 
+[HttpGet("stats")]
+[Authorize]
+public async Task<IActionResult> GetUserStats()
+{
+    // Pega o userId do token JWT
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Unauthorized();
+    int userId = int.Parse(userIdClaim.Value);
+ 
+    var attempts = await _context.Attempts
+        .Where(a => a.UserId == userId)
+        .ToListAsync();
+ 
+    int quizzesPlayed = attempts.Count;
+    int totalScore    = attempts.Sum(a => a.Score ?? 0);
+    double avgScore   = quizzesPlayed > 0
+        ? Math.Round((double)totalScore / quizzesPlayed, 1)
+        : 0;
+ 
+    return Ok(new
+    {
+        quizzesPlayed,
+        totalScore,
+        avgScore
+    });
+}
+
+[Authorize]
+[HttpPost("logout")]
+public IActionResult Logout()
+{
+    // O token expira naturalmente. O frontend já removeu do localStorage.
+    return Ok(new { message = "Logout realizado com sucesso." });
+
+}
+
 
         
     }
