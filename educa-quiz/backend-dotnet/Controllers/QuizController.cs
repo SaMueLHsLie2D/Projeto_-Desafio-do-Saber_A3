@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-
 namespace backend_dotnet.Controllers;
 
 [ApiController]
@@ -38,7 +37,6 @@ public class QuizController : ControllerBase
             q.Title.ToLower() == title.ToLower() &&
             q.Description.ToLower() == description.ToLower());
 
-
         if (quiz == null)
         {
             return NotFound("Quiz não encontrado.");
@@ -60,13 +58,12 @@ public class QuizController : ControllerBase
             QuizId = quiz.Id,
             Questions = randomQuestions
         });
-
-       
     }
+
     [Authorize] // garante que só usuários logados acessam
     [HttpPut("pontos")]
     public async Task<IActionResult> SaveQuizPoints([FromBody] QuizPointsDto dto)
-   {
+    {
         // Recupera o ID do usuário a partir do token JWT
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
@@ -89,24 +86,21 @@ public class QuizController : ControllerBase
         if (leaderboard == null)
         {
             leaderboard = new Leaderboard
-           {
+            {
                 UserId = userId,
                 TotalScore = dto.Score
-           };
-           _context.Leaderboards.Add(leaderboard);
+            };
+            _context.Leaderboards.Add(leaderboard);
         }
-         else
-         {
-             leaderboard.TotalScore += dto.Score;
-         }
+        else
+        {
+            leaderboard.TotalScore += dto.Score;
+        }
 
         await _context.SaveChangesAsync();
 
-       return Ok(new { message = "Pontuação salva com sucesso!", totalScore = leaderboard.TotalScore });
+        return Ok(new { message = "Pontuação salva com sucesso!", totalScore = leaderboard.TotalScore });
     }
-
-
-
 
     // CRIAR QUIZ
     [HttpPost]
@@ -116,7 +110,6 @@ public class QuizController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-     
 
         var quiz = new Quiz
         {

@@ -5,40 +5,33 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend_dotnet.Controllers
 {
-   
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AvatarController(AppDbContext context) : ControllerBase
+    {
+        private readonly AppDbContext _context = context;
 
-        [ApiController]
-        [Route("api/[controller]")]
-
-        public class AvatarController(AppDbContext context) : ControllerBase
+        [Authorize]
+        [HttpGet("avatars/user/me")]
+        public IActionResult GetMyAvatars()
         {
-            private readonly AppDbContext _context = context;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized("Usuário não autenticado.");
+            int userId = int.Parse(userIdClaim.Value);
 
+            var leaderboard = _context.Leaderboards.FirstOrDefault(l => l.UserId == userId);
+            int totalScore = leaderboard?.TotalScore ?? 0;
 
-            [Authorize]
-            [HttpGet("avatars/user/me")]
-            public IActionResult GetMyAvatars()
+            var avatars = _context.Avatars.Select(a => new
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null) return Unauthorized("Usuário não autenticado.");
-                int userId = int.Parse(userIdClaim.Value);
+                a.Id,
+                a.Name,
+                a.ImageUrl,
+                a.RequiredValue,
+                IsUnlocked = totalScore >= a.RequiredValue
+            }).ToList();
 
-                var leaderboard = _context.Leaderboards.FirstOrDefault(l => l.UserId == userId);
-                int totalScore = leaderboard?.TotalScore ?? 0;
-
-                var avatars = _context.Avatars.Select(a => new
-                {
-                    a.Id,
-                    a.Name,
-                    a.ImageUrl,
-                    a.RequiredValue,
-                    IsUnlocked = totalScore >= a.RequiredValue
-                }).ToList();
-
-                return Ok(avatars);
-
-                
-
-            }
+            return Ok(avatars);
         }
+    }
 }

@@ -10,12 +10,23 @@ interface UserProfile {
   color: string;
   score: number;
   level?: string;
+  avatarId?: number;
+  colorId?: number;
 }
 
 interface UserStats {
   quizzesPlayed: number;
   totalScore: number;
   avgScore: number;
+}
+
+interface NextUnlock {
+  type: "avatar" | "color" | "complete";
+  name?: string;
+  currentScore: number;
+  targetScore: number;
+  pointsNeeded?: number;
+  message?: string;
 }
 
 export default function Dashboard() {
@@ -25,6 +36,11 @@ export default function Dashboard() {
     quizzesPlayed: 0,
     totalScore: 0,
     avgScore: 0,
+  });
+  const [nextUnlock, setNextUnlock] = useState<NextUnlock>({
+    type: "complete",
+    currentScore: 0,
+    targetScore: 0,
   });
 
   useEffect(() => {
@@ -51,6 +67,8 @@ export default function Dashboard() {
           color: data.color,
           score: data.score ?? 0,
           level: data.level ?? "Iniciante",
+          avatarId: data.avatarId,
+          colorId: data.colorId,
         };
         setUser(profile);
         localStorage.setItem("user", JSON.stringify(profile));
@@ -60,6 +78,7 @@ export default function Dashboard() {
         if (stored) setUser(JSON.parse(stored));
       });
 
+    // Busca stats
     fetch(`${API_URL}/user/stats`, { headers })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
@@ -69,6 +88,14 @@ export default function Dashboard() {
           totalScore: data.totalScore ?? 0,
           avgScore: data.avgScore ?? 0,
         });
+      })
+      .catch(() => {});
+
+    // ✨ NOVO: Busca a próxima conquista dinamicamente
+    fetch(`${API_URL}/user/proxima-conquista`, { headers })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data) setNextUnlock(data);
       })
       .catch(() => {});
   }, [navigate]);
@@ -85,7 +112,7 @@ export default function Dashboard() {
     }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/");
+    navigate("/login");
   }
 
   if (!user) {
@@ -104,7 +131,6 @@ export default function Dashboard() {
       <div className="dash-banner-top" />
       <div className="dash-banner-bottom" />
 
-      {/* Botão de logout fixo no canto superior direito */}
       <button className="dash-logout-btn" onClick={handleLogout} title="Sair">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -117,15 +143,12 @@ export default function Dashboard() {
 
       <div className="dash-body">
 
-        {/* ── Sidebar ── */}
         <aside className="dash-sidebar">
           <Ranking />
         </aside>
 
-        {/* ── Main ── */}
         <main className="dash-main">
 
-          {/* Profile Card */}
           <div className="dash-profile-card">
             <div className="dash-card-banner">
               <div className="dash-card-banner-pattern" />
@@ -203,20 +226,39 @@ export default function Dashboard() {
             </button>
           </div>
 
+          {/* ✨ Progress card dinâmico */}
           <div className="dash-progress-card">
             <div className="dash-progress-header">
-              <span className="dash-progress-title">🎯 Próxima conquista</span>
-              <span className="dash-progress-pts">{stats.totalScore} / 200 pts</span>
+              <span className="dash-progress-title">
+                {nextUnlock.type === "complete" ? "🎉 Parabéns!" : "🎯 Próxima conquista"}
+              </span>
+              <span className="dash-progress-pts">
+                {nextUnlock.currentScore} / {nextUnlock.targetScore} pts
+              </span>
             </div>
-            <div className="dash-progress-bar-track">
-              <div
-                className="dash-progress-bar-fill"
-                style={{ width: `${Math.min((stats.totalScore / 200) * 100, 100)}%` }}
-              />
-            </div>
-            <p className="dash-progress-hint">
-              Faltam <strong>{Math.max(200 - stats.totalScore, 0)} pontos</strong> para desbloquear o próximo avatar!
-            </p>
+
+            {nextUnlock.type === "complete" ? (
+              <p className="dash-progress-complete">
+                {nextUnlock.message}
+              </p>
+            ) : (
+              <>
+                <div className="dash-progress-bar-track">
+                  <div
+                    className="dash-progress-bar-fill"
+                    style={{ width: `${Math.min((nextUnlock.currentScore / nextUnlock.targetScore) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="dash-progress-hint">
+                  {nextUnlock.type === "avatar" && (
+                    <>Desbloqueie o avatar <strong>"{nextUnlock.name}"</strong> — faltam <strong>{nextUnlock.pointsNeeded} pontos</strong></>
+                  )}
+                  {nextUnlock.type === "color" && (
+                    <>Desbloqueie a cor <strong>"{nextUnlock.name}"</strong> — faltam <strong>{nextUnlock.pointsNeeded} pontos</strong></>
+                  )}
+                </p>
+              </>
+            )}
           </div>
 
         </main>
