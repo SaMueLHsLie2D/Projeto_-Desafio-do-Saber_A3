@@ -46,48 +46,124 @@ namespace backend_dotnet.Controllers
             return Ok(new {message = "Usuário cadastrado com sucesso!"});
         }
 
-        [HttpPost("login")]
+[HttpPost("login")]
+public async Task<IActionResult> Login(LoginDto dto)
+{
+    var user = await _context.Users
+        .Include(u => u.Avatar)
+        .Include(u => u.Color)
+        .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
-        public async Task<IActionResult> Login(LoginDto dto)
-        {
-            var user = await _context.Users.Include(u => u.Avatar).Include(u => u.Color).FirstOrDefaultAsync(u => u.Email == dto.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            {
-               return Unauthorized("Usuário ou senha inválidos.");
-            }
+    if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+        return Unauthorized("Usuário ou senha inválidos.");
 
-            var attempt = await _context.Attempts.FirstOrDefaultAsync(a => a.UserId == user.Id);
-            var score = attempt?.Score ?? 0;
+    // ✅ Busca o total de pontos do leaderboard, não de uma tentativa
+    var leaderboard = await _context.Leaderboards.FirstOrDefaultAsync(l => l.UserId == user.Id);
+    var totalScore = leaderboard?.TotalScore ?? 0;
 
-            var jwt = _tokenService.GenerateToken(user);
+    var jwt = _tokenService.GenerateToken(user);
 
+    var avatarUrl = user.Avatar != null
+        ? $"{Request.Scheme}://{Request.Host}{user.Avatar.ImageUrl}"
+        : "";
 
-            var avatarUrl = user.Avatar != null 
-            ? $"{Request.Scheme}://{Request.Host}{user.Avatar.ImageUrl}" 
-            : "";
+    return Ok(new LoginResponseDto
+    {
+        Token = jwt,
+        Name = user.Name,
+        Avatar = avatarUrl,
+        Color = user.Color?.HexValue ?? "#000000",
+        Score = totalScore  // ✅ score real
+    });
+}
 
+// ✅ Endpoint novo — GET /api/user/perfil
+[Authorize]
+[HttpGet("perfil")]
+public async Task<IActionResult> GetPerfil()
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Unauthorized();
 
-            var response = new LoginResponseDto
-            {
-                Token = jwt,
-                Name = user.Name,
-                Avatar = avatarUrl,
-                Color = user.Color?.HexValue ?? "#000000",
-                Score = score
-            };
+    int userId = int.Parse(userIdClaim.Value);
 
-            return Ok(response);
+    var user = await _context.Users
+        .Include(u => u.Avatar)
+        .Include(u => u.Color)
+        .FirstOrDefaultAsync(u => u.Id == userId);
 
-        }
+    if (user == null) return NotFound();
 
-        // Apenas testar se o token está funcionando enquanto nao tem o front-end
-        [Authorize]
-        [HttpGet("TesteAuth")]
-        public IActionResult TesteAuth()
-        {
-             return Ok(new { message = "Acesso autorizado" });
-        }
+    var leaderboard = await _context.Leaderboards
+        .FirstOrDefaultAsync(l => l.UserId == userId);
 
+    var avatarUrl = user.Avatar != null
+        ? $"{Request.Scheme}://{Request.Host}{user.Avatar.ImageUrl}"
+        : "";
+
+    return Ok(new
+    {
+        name = user.Name,
+        avatar = avatarUrl,
+        color = user.Color?.HexValue ?? "#000000",
+        score = leaderboard?.TotalScore ?? 0,
+        avatarId = user.AvatarId,
+        colorId = user.ColorId
+    });
+}
+
+[Authorize]
+[HttpPut("perfil/avatar")]
+public async Task<IActionResult> EquiparAvatar([FromBody] EquiparAvatarDto dto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Unauthorized();
+    int userId = int.Parse(userIdClaim.Value);
+ 
+    var user = await _context.Users.FindAsync(userId);
+    if (user == null) return NotFound();
+ 
+    // Verifica se o avatar existe e se o usuário tem pontos suficientes
+    var avatar = await _context.Avatars.FindAsync(dto.AvatarId);
+    if (avatar == null) return NotFound("Avatar não encontrado.");
+ 
+    var leaderboard = await _context.Leaderboards.FirstOrDefaultAsync(l => l.UserId == userId);
+    int totalScore = leaderboard?.TotalScore ?? 0;
+ 
+    if (totalScore < avatar.RequiredValue)
+        return BadRequest($"Você precisa de {avatar.RequiredValue} pontos para desbloquear este avatar.");
+ 
+    user.AvatarId = dto.AvatarId;
+    await _context.SaveChangesAsync();
+ 
+    return Ok(new { message = "Avatar equipado com sucesso!" });
+}
+
+[Authorize]
+[HttpPut("perfil/color")]
+public async Task<IActionResult> EquiparColor([FromBody] EquiparColorDto dto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Unauthorized();
+    int userId = int.Parse(userIdClaim.Value);
+ 
+    var user = await _context.Users.FindAsync(userId);
+    if (user == null) return NotFound();
+ 
+    var color = await _context.Colors.FindAsync(dto.ColorId);
+    if (color == null) return NotFound("Cor não encontrada.");
+ 
+    var leaderboard = await _context.Leaderboards.FirstOrDefaultAsync(l => l.UserId == userId);
+    int totalScore = leaderboard?.TotalScore ?? 0;
+ 
+    if (totalScore < color.RequiredValue)
+        return BadRequest($"Você precisa de {color.RequiredValue} pontos para desbloquear esta cor.");
+ 
+    user.ColorId = dto.ColorId;
+    await _context.SaveChangesAsync();
+ 
+    return Ok(new { message = "Cor equipada com sucesso!" });
+}
 
 
         

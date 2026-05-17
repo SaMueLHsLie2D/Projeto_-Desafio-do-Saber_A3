@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using backend_dotnet.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,21 +16,29 @@ namespace backend_dotnet.Controllers
 
 
             [Authorize]
-            [HttpGet("avatars/user/{userId}")]
-            public IActionResult GetAvatarsUser(int userId)
+            [HttpGet("avatars/user/me")]
+            public IActionResult GetMyAvatars()
             {
-                
-                var user = _context.Users.FirstOrDefault(u => u.Id == userId);
-                if (user == null) return NotFound("Usuário não encontrado.");
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null) return Unauthorized("Usuário não autenticado.");
+                int userId = int.Parse(userIdClaim.Value);
 
                 var leaderboard = _context.Leaderboards.FirstOrDefault(l => l.UserId == userId);
-                if (leaderboard == null) return NotFound("Leaderboard não encontrado para o usuário.");
+                int totalScore = leaderboard?.TotalScore ?? 0;
 
-                int totalscore = leaderboard.TotalScore;
+                var avatars = _context.Avatars.Select(a => new
+                {
+                    a.Id,
+                    a.Name,
+                    a.ImageUrl,
+                    a.RequiredValue,
+                    IsUnlocked = totalScore >= a.RequiredValue
+                }).ToList();
 
-                var avatars = _context.Avatars.Select(a => new { a.Id, a.Name, a.ImageUrl, a.RequiredValue, IsUnlocked = totalscore >= a.RequiredValue }).ToList();
                 return Ok(avatars);
-        
+
+                
+
             }
         }
 }

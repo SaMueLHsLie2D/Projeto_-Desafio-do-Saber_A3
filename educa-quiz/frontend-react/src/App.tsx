@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Quizzes from "./pages/Quizzes";
 import RecycleGame from "./pages/RecycleGame";
+import Personalizar from "./pages/Personalizar";
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,8 @@ export default function App() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/perfil/personalizar" element={<Personalizar />} />
 
         <Route path="/reciclagem" element={<RecycleGame />} />
       </Routes>
