@@ -1,4 +1,5 @@
 using backend_dotnet.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend_dotnet.Controllers
@@ -12,6 +13,8 @@ namespace backend_dotnet.Controllers
         {
             private readonly AppDbContext _context = context;
 
+
+            [Authorize]
             [HttpGet("avatars/user/{userId}")]
             public IActionResult GetAvatarsUser(int userId)
             {
@@ -19,7 +22,7 @@ namespace backend_dotnet.Controllers
                 var user = _context.Users.FirstOrDefault(u => u.Id == userId);
                 if (user == null) return NotFound("Usuário não encontrado.");
 
-                var leaderboard = _context.LeaderBoards.FirstOrDefault(l => l.UserId == userId);
+                var leaderboard = _context.Leaderboards.FirstOrDefault(l => l.UserId == userId);
                 if (leaderboard == null) return NotFound("Leaderboard não encontrado para o usuário.");
 
                 int totalscore = leaderboard.TotalScore;

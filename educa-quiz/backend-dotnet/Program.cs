@@ -45,13 +45,37 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
         ValidateAudience = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
         ClockSkew = TimeSpan.Zero
+    };
+
+    // ✅ Adicione isso para logar o motivo real do 401
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"❌ JWT falhou: {context.Exception.GetType().Name}: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"✅ JWT válido para: {context.Principal?.Identity?.Name}");
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine($"⚠️ Challenge disparado. Erro: {context.Error}, Descrição: {context.ErrorDescription}");
+            return Task.CompletedTask;
+        }
     };
 });
 
 builder.Services.AddScoped<AvatarSeedService>();
 builder.Services.AddScoped<TokenService>();
 
+
+// ...tudo igual até aqui...
 
 var app = builder.Build();
 
@@ -61,6 +85,7 @@ using (var scope = app.Services.CreateScope())
     seeder.SeedAvatars();
 }
 
+// ✅ CORS sempre primeiro
 app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
@@ -69,20 +94,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
-        c.RoutePrefix = string.Empty; 
+        c.RoutePrefix = string.Empty;
     });
 }
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
+// ✅ HTTPS antes de auth
 app.UseHttpsRedirection();
 
+// ✅ Ordem obrigatória: Authentication → Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+app.UseStaticFiles();
 app.MapControllers();
 
-app.UseStaticFiles();
 app.Run();
