@@ -112,7 +112,7 @@ export default function Dashboard() {
     }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/");
   }
 
   if (!user) {

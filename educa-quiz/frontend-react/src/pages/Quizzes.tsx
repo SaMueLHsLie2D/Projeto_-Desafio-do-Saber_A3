@@ -22,16 +22,16 @@ export default function Quizzes() {
   const [points, setPoints] = useState(0);
   const navigate = useNavigate();
 
-  const subjectMap: Record<string, string> = {
-    "Matemática": "mat",
-    "Português": "port",
-    "Ciências": "ciencias"
+  const subjectMap: Record<string, { code: string; label: string; icon: string }> = {
+    "mat": { code: "mat", label: "Matemática", icon: "📐" },
+    "port": { code: "port", label: "Português", icon: "📖" },
+    "ciencias": { code: "ciencias", label: "Ciências", icon: "🔬" }
   };
 
-  const difficultyMap: Record<string, string> = {
-    "Fácil": "facil",
-    "Médio": "medio",
-    "Difícil": "dificil"
+  const difficultyMap: Record<string, { code: string; label: string; icon: string }> = {
+    "facil": { code: "facil", label: "Fácil", icon: "🌱" },
+    "medio": { code: "medio", label: "Médio", icon: "⚖️" },
+    "dificil": { code: "dificil", label: "Difícil", icon: "🔥" }
   };
 
   const pointsMap: Record<string, number> = {
@@ -40,15 +40,14 @@ export default function Quizzes() {
     "dificil": 9
   };
 
-  const chooseSubject = (s: string) => {
-    setTitle(subjectMap[s]);
+  const chooseSubject = (code: string) => {
+    setTitle(code);
     setStep("difficulty");
   };
 
-  const chooseDifficulty = (desc: string) => {
-    const diff = difficultyMap[desc];
-    setDescription(diff);
-    fetch(`${API_URL}/quiz/${subjectMap[desc] ?? title}/${diff}?count=5`)
+  const chooseDifficulty = (code: string) => {
+    setDescription(code);
+    fetch(`${API_URL}/quiz/${title}/${code}?count=5`)
       .then(res => {
         if (!res.ok) throw new Error("Erro na requisição: " + res.status);
         return res.json();
@@ -58,10 +57,12 @@ export default function Quizzes() {
         setQuizId(data.quizId);
         setStep("quiz");
       })
-      .catch(err => console.error("Erro ao buscar quiz:", err));
+      .catch(err => {
+        console.error("Erro ao buscar quiz:", err);
+        alert("Erro ao carregar o quiz. Tente novamente.");
+      });
   };
 
-  // FIX 1: calcula os totais localmente para evitar estado stale
   const answerQuestion = (index: number) => {
     const q = questions[current];
     const isCorrect = index === q.correct;
@@ -72,9 +73,9 @@ export default function Quizzes() {
     if (isCorrect) {
       setScore(newScore);
       setPoints(newPoints);
-      setFeedback("✅ Acertou!");
+      setFeedback("correct");
     } else {
-      setFeedback("❌ Errou!");
+      setFeedback("incorrect");
     }
 
     setTimeout(() => {
@@ -82,24 +83,21 @@ export default function Quizzes() {
       if (current + 1 < questions.length) {
         setCurrent(current + 1);
       } else {
-        // FIX 2: passa os valores calculados localmente, não lê do estado
         finishQuiz(newScore, newPoints);
       }
-    }, 1000);
+    }, 1500);
   };
 
-  // FIX 2: recebe score e points como parâmetros
   const finishQuiz = (finalScore: number, finalPoints: number) => {
     const token = localStorage.getItem("token");
 
-    // FIX 3: valida o token antes de chamar a API
     if (!token) {
       console.error("Usuário não autenticado. Redirecionando para login.");
       navigate("/login");
       return;
     }
 
-    setFinished(true); // FIX 4: mostra a tela final imediatamente, sem alert()
+    setFinished(true);
 
     fetch(`${API_URL}/quiz/pontos`, {
       method: "PUT",
@@ -115,74 +113,154 @@ export default function Quizzes() {
       })
       .then(data => {
         console.log("Pontos salvos:", data);
-        // navigate é opcional aqui — o finished já mostra a tela de resultado
-        // se quiser ir direto para o dashboard, mantenha o navigate abaixo
-        // navigate("/dashboard");
       })
       .catch(err => console.error("Erro ao salvar pontos:", err));
   };
 
   return (
     <div className="quiz-container">
-      {step === "subject" && (
-        <>
-          <h1 className="quiz-title">Escolha uma categoria:</h1>
-          <div className="button-group">
-            <button className="quiz-btn" onClick={() => chooseSubject("Matemática")}>📐 Matemática</button>
-            <button className="quiz-btn" onClick={() => chooseSubject("Português")}>📖 Português</button>
-            <button className="quiz-btn" onClick={() => chooseSubject("Ciências")}>🔬 Ciências</button>
+      <div className="quiz-card">
+        {/* SELEÇÃO DE MATÉRIA */}
+        {step === "subject" && (
+          <div className="quiz-subjects">
+            <h1 className="quiz-title">Escolha uma categoria</h1>
+            <div className="quiz-subject-grid">
+              {Object.entries(subjectMap).map(([key, subject]) => (
+                <button
+                  key={key}
+                  className="quiz-subject-btn"
+                  data-subject={key}
+                  onClick={() => chooseSubject(key)}
+                >
+                  <span className="quiz-subject-icon">{subject.icon}</span>
+                  <span className="quiz-subject-label">{subject.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </>
-      )}
+        )}
 
-      {step === "difficulty" && (
-        <>
-          <h1 className="quiz-title">Escolha a dificuldade:</h1>
-          <div className="button-group">
-            <button className="quiz-btn" onClick={() => chooseDifficulty("Fácil")}>🌱 Fácil</button>
-            <button className="quiz-btn" onClick={() => chooseDifficulty("Médio")}>⚖️ Médio</button>
-            <button className="quiz-btn" onClick={() => chooseDifficulty("Difícil")}>🔥 Difícil</button>
-          </div>
-        </>
-      )}
-
-      {step === "quiz" && !finished && questions.length > 0 && (
-        <>
-          <h1 className="quiz-title">Quiz de {title} - {description}</h1>
-          <h2 className="quiz-subtitle">Pergunta {current + 1} de {questions.length}</h2>
-          <p className="quiz-question">{questions[current].question}</p>
-          <div className="button-group">
-            {questions[current].options.map((opt, i) => (
-              <button className="quiz-btn" key={i} onClick={() => answerQuestion(i)}>
-                {opt}
+        {/* SELEÇÃO DE DIFICULDADE */}
+        {step === "difficulty" && (
+          <div className="quiz-difficulties">
+            <div style={{ gridColumn: "1 / -1" }}>
+              <h1 className="quiz-title">Escolha a dificuldade</h1>
+            </div>
+            {Object.entries(difficultyMap).map(([key, difficulty]) => (
+              <button
+                key={key}
+                className="quiz-difficulty-btn"
+                data-difficulty={key}
+                onClick={() => chooseDifficulty(key)}
+              >
+                <span className="quiz-difficulty-icon">{difficulty.icon}</span>
+                <span className="quiz-difficulty-label">{difficulty.label}</span>
               </button>
             ))}
           </div>
-          {feedback && <p className="quiz-feedback">{feedback}</p>}
-        </>
-      )}
+        )}
 
-      {finished && (
-        <div className="quiz-result">
-          <h1>Quiz finalizado!</h1>
-          <p>Você acertou {score} de {questions.length} questões.</p>
-          <p>Sua pontuação total foi {points} pontos.</p>
-          <div className="button-group">
-            <button className="quiz-btn" onClick={() => navigate("/dashboard")}>
-              📊 Ir para Dashboard
-            </button>
-            <button className="quiz-btn" onClick={() => {
-              setStep("subject");
-              setCurrent(0);
-              setScore(0);
-              setPoints(0);
-              setFinished(false);
-            }}>
-              🔄 Jogar novamente
-            </button>
+        {/* DURANTE O QUIZ */}
+        {step === "quiz" && !finished && questions.length > 0 && (
+          <>
+            <div className="quiz-progress">
+              <span className="quiz-progress-text">
+                Pergunta {current + 1} de {questions.length}
+              </span>
+            </div>
+            <div className="quiz-progress-bar">
+              <div
+                className="quiz-progress-fill"
+                style={{ width: `${((current + 1) / questions.length) * 100}%` }}
+              />
+            </div>
+
+            <div style={{ marginTop: "20px" }}>
+              <span className="quiz-subtitle">
+                {subjectMap[title]?.label} • {difficultyMap[description]?.label}
+              </span>
+              <h2 className="quiz-question">{questions[current].question}</h2>
+            </div>
+
+            <div className="quiz-options">
+              {questions[current].options.map((opt, i) => (
+                <button
+                  key={i}
+                  className="quiz-option-btn"
+                  onClick={() => answerQuestion(i)}
+                  disabled={feedback !== ""}
+                >
+                  <span style={{ fontSize: "20px", marginRight: "8px" }}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  {opt}
+                </button>
+              ))}
+            </div>
+
+            {feedback && (
+              <div className={`quiz-feedback ${feedback}`}>
+                <span>{feedback === "correct" ? "✅" : "❌"}</span>
+                <span>{feedback === "correct" ? "Acertou!" : "Errou!"}</span>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* RESULTADO FINAL */}
+        {finished && (
+          <div className="quiz-result">
+            <div className="quiz-result-header">
+              <span className="quiz-result-emoji">
+                {score >= questions.length * 0.7 ? "🎉" : score >= questions.length * 0.5 ? "👍" : "📚"}
+              </span>
+              <h1 className="quiz-result-title">
+                {score >= questions.length * 0.7 ? "Parabéns!" : "Quiz finalizado!"}
+              </h1>
+            </div>
+
+            <div className="quiz-result-stats">
+              <div className="quiz-result-stat">
+                <span className="quiz-result-stat-value">{score}</span>
+                <span className="quiz-result-stat-label">Acertos</span>
+              </div>
+              <div className="quiz-result-stat">
+                <span className="quiz-result-stat-value">{questions.length - score}</span>
+                <span className="quiz-result-stat-label">Erros</span>
+              </div>
+              <div className="quiz-result-stat">
+                <span className="quiz-result-stat-value">{points}</span>
+                <span className="quiz-result-stat-label">Pontos ganhos</span>
+              </div>
+            </div>
+
+            <p className="quiz-result-message">
+              Você acertou {score} de {questions.length} questões. Continue praticando para melhorar!
+            </p>
+
+            <div className="quiz-result-buttons">
+              <button
+                className="quiz-result-btn"
+                onClick={() => navigate("/dashboard")}
+              >
+                📊 Início
+              </button>
+              <button
+                className="quiz-result-btn"
+                onClick={() => {
+                  setStep("subject");
+                  setCurrent(0);
+                  setScore(0);
+                  setPoints(0);
+                  setFinished(false);
+                }}
+              >
+                🔄 Jogar novamente
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

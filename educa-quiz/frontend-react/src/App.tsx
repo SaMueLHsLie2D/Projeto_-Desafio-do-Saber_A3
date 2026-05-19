@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Quizzes from "./pages/Quizzes";
-import RecycleGame from "./pages/RecycleGame";
+import RecycleGame from "./pages/Reciclagem";
 import Personalizar from "./pages/Personalizar";
 
 

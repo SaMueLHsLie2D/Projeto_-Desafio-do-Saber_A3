@@ -102,6 +102,62 @@ public class QuizController : ControllerBase
         return Ok(new { message = "Pontuação salva com sucesso!", totalScore = leaderboard.TotalScore });
     }
 
+
+        [Authorize]
+        [HttpPost("reciclagempontos")]
+        public async Task<IActionResult> AddRecyclePoints([FromBody] ScoreRequest request)
+        {
+            // Valida o request
+            if (request == null || request.score < 0)
+            {
+                return BadRequest(new { message = "Score inválido" });
+            }
+ 
+            // Extrai o userId do JWT token
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "Usuário não identificado" });
+            }
+ 
+            try
+            {
+                // Busca ou cria o registro do usuário no Leaderboard
+                var leaderboard = await _context.Leaderboards
+                    .FirstOrDefaultAsync(l => l.UserId == userId);
+ 
+                if (leaderboard == null)
+                {
+                    // Se não existir, cria um novo
+                    leaderboard = new Leaderboard
+                    {
+                        UserId = userId,
+                        TotalScore = request.score
+                    };
+                    _context.Leaderboards.Add(leaderboard);
+                }
+                else
+                {
+                    // Se existir, adiciona os pontos
+                    leaderboard.TotalScore += request.score;
+                }
+ 
+                await _context.SaveChangesAsync();
+ 
+                return Ok(new
+                {
+                    message = "Pontos adicionados com sucesso",
+                    totalScore = leaderboard.TotalScore,
+                    pointsAdded = request.score
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erro ao salvar pontos", error = ex.Message });
+            }
+        }
+    
+
     // CRIAR QUIZ
     [HttpPost]
     public IActionResult Create(CreateQuizDto dto)
@@ -125,3 +181,4 @@ public class QuizController : ControllerBase
         return Ok(quiz);
     }
 }
+
