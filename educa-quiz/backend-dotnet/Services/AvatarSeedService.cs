@@ -28,47 +28,42 @@ public class AvatarSeedService
             var fileName = Path.GetFileName(file);
             var imageUrl = "/avatars/" + fileName;
 
-            // lógica para extrair o valor necessário do nome do arquivo, por exemplo: avatar_100.png -> requiredValue = 100
             if (!_context.Avatars.Any(a => a.ImageUrl == imageUrl))
             {
                 int requiredValue = 0;
+                string name = Path.GetFileNameWithoutExtension(fileName);
 
-                var parts = fileName.Split('_', '.');
-
-                foreach (var part in parts)
+                // separa pelo "_" e pega a primeira parte como nome
+                var parts = name.Split('_');
+                if (parts.Length > 1)
                 {
-                    if (int.TryParse(part, out int value))
+                    name = parts[0]; // texto antes do "_"
+                    if (int.TryParse(parts[1], out int value))
                     {
-                        requiredValue = value;
-                        break;
+                        requiredValue = value; // número depois do "_"
                     }
                 }
 
-
                 _context.Avatars.Add(new Avatar
                 {
-                    Name = fileName,
+                    Name = name,
                     ImageUrl = imageUrl,
                     RequiredValue = requiredValue
-        
                 });
             }
         }
 
-        // deleta os avatrs que nao existem mais na pasta
-
+        // deleta os avatares que não existem mais na pasta
         var existingAvatars = _context.Avatars.ToList();
         foreach (var avatar in existingAvatars)
         {
-
-            var filePath = Path.Combine(path, Path.GetFileName(avatar.ImageUrl) );
+            var filePath = Path.Combine(path, Path.GetFileName(avatar.ImageUrl));
 
             if (!File.Exists(filePath))
             {
                 _context.Avatars.Remove(avatar);
             }
         }
-
 
         _context.SaveChanges();
     }
