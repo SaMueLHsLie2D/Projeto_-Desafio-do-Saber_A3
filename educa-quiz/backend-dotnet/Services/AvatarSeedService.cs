@@ -28,14 +28,40 @@ public class AvatarSeedService
             var fileName = Path.GetFileName(file);
             var imageUrl = "/avatars/" + fileName;
 
-            // evita duplicar no banco
             if (!_context.Avatars.Any(a => a.ImageUrl == imageUrl))
             {
+                int requiredValue = 0;
+                string name = Path.GetFileNameWithoutExtension(fileName);
+
+                // separa pelo "_" e pega a primeira parte como nome
+                var parts = name.Split('_');
+                if (parts.Length > 1)
+                {
+                    name = parts[0]; // texto antes do "_"
+                    if (int.TryParse(parts[1], out int value))
+                    {
+                        requiredValue = value; // número depois do "_"
+                    }
+                }
+
                 _context.Avatars.Add(new Avatar
                 {
-                    Name = fileName,
-                    ImageUrl = imageUrl
+                    Name = name,
+                    ImageUrl = imageUrl,
+                    RequiredValue = requiredValue
                 });
+            }
+        }
+
+        // deleta os avatares que não existem mais na pasta
+        var existingAvatars = _context.Avatars.ToList();
+        foreach (var avatar in existingAvatars)
+        {
+            var filePath = Path.Combine(path, Path.GetFileName(avatar.ImageUrl));
+
+            if (!File.Exists(filePath))
+            {
+                _context.Avatars.Remove(avatar);
             }
         }
 

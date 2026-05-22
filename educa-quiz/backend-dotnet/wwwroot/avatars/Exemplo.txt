@@ -1,8 +1,0 @@
-backend-dotnet/
-├── wwwroot/
-│   └── avatars/
-│       ├── avatar1.png
-│       ├── avatar2.png
-│       └── avatar3.png
-
-Não tem as PNG vc vai ter que colocar as suas para testar

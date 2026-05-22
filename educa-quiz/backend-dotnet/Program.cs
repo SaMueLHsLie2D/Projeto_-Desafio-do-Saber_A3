@@ -1,13 +1,19 @@
+using System.Text;
 using backend_dotnet.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using backend_dotnet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]!);
+
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 34))
+        new MySqlServerVersion(new Version(8, 4, 8))
     )
 );
 
@@ -24,7 +30,52 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ClockSkew = TimeSpan.Zero
+    };
+
+    // ✅ Adicione isso para logar o motivo real do 401
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"❌ JWT falhou: {context.Exception.GetType().Name}: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"✅ JWT válido para: {context.Principal?.Identity?.Name}");
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine($"⚠️ Challenge disparado. Erro: {context.Error}, Descrição: {context.ErrorDescription}");
+            return Task.CompletedTask;
+        }
+    };
+});
+
 builder.Services.AddScoped<AvatarSeedService>();
+builder.Services.AddScoped<TokenService>();
+
+
+// ...tudo igual até aqui...
 
 var app = builder.Build();
 
@@ -34,12 +85,27 @@ using (var scope = app.Services.CreateScope())
     seeder.SeedAvatars();
 }
 
+// ✅ CORS sempre primeiro
 app.UseCors("AllowAll");
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
-app.MapControllers();
+// ✅ HTTPS antes de auth
+app.UseHttpsRedirection();
+
+// ✅ Ordem obrigatória: Authentication → Authorization
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseStaticFiles();
+app.MapControllers();
+
 app.Run();

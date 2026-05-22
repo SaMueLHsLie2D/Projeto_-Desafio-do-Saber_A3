@@ -1,17 +1,37 @@
-[ApiController]
-[Route("api/color")]
-public class ColorController : ControllerBase
+using System.Security.Claims;
+using backend_dotnet.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace backend_dotnet.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public ColorController(AppDbContext context)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ColorController(AppDbContext context) : ControllerBase
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context = context;
 
-    [HttpGet]
-    public IActionResult Get()
-    {
-        return Ok(_context.Colors.ToList());
+        [Authorize]
+        [HttpGet("colors/user/me")]
+        public IActionResult GetMyColors()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized("Usuário não autenticado.");
+            int userId = int.Parse(userIdClaim.Value);
+
+            var leaderboard = _context.Leaderboards.FirstOrDefault(l => l.UserId == userId);
+            int totalScore = leaderboard?.TotalScore ?? 0;
+
+            var colors = _context.Colors.Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.HexValue,
+                c.RequiredValue,
+                IsUnlocked = totalScore >= c.RequiredValue
+            }).ToList();
+
+            return Ok(colors);
+        }
     }
 }

@@ -1,8 +1,23 @@
-namespace backend_dotnet.Models;
+using System.ComponentModel.DataAnnotations;
 
-public class Color
+namespace backend_dotnet.Models
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string HexValue { get; set; }
+    public class Color
+    {
+        [Key]
+        public int Id {get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; set; }
+
+        [Required]
+        [MaxLength(20)]
+        public string HexValue { get; set; }
+
+        [Required]
+        public int RequiredValue { get; set; }
+        public ICollection<User> Users { get; set; } = new List<User>();
+        
+    }
 }

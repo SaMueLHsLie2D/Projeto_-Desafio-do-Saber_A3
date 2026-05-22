@@ -1,63 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { API_URL } from "../services/api";
 
 export default function Register() {
-  const [avatars, setAvatars] = useState<any[]>([]);
-  const [colors, setColors] = useState<any[]>([]);
-
-  const [avatarId, setAvatarId] = useState<number>();
-  const [colorId, setColorId] = useState<number>();
-
-  useEffect(() => {
-    fetch(`${API_URL}/avatar`).then(res => res.json()).then(setAvatars);
-    fetch(`${API_URL}/color`).then(res => res.json()).then(setColors);
-  }, []);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   async function register() {
-    await fetch(`${API_URL}/auth/register`, {
+    const res = await fetch(`${API_URL}/user/Cadastro`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        name: "Teste",
-        email: "teste@email.com",
-        password: "123",
-        avatarId,
-        colorId
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password })
     });
 
+    if (!res.ok) {
+      const err = await res.text();
+      alert("Erro no cadastro: " + err);
+      return;
+    }
+
+    alert("Cadastro realizado com sucesso!");
     window.location.href = "/";
   }
 
   return (
     <div>
       <h1>Cadastro</h1>
-
-      <div style={{ display: "flex", gap: 10 }}>
-  {avatars.map(a => (
-    <img 
-      key={a.id}
-      src={`http://localhost:5000${a.image_url}`}
-      onClick={() => setAvatarId(a.id)}
-      style={{
-        width: 80,
-        height: 80,
-        cursor: "pointer",
-        border: a.id === avatarId ? "3px solid blue" : "2px solid gray",
-        borderRadius: "50%",
-        transform: a.id === avatarId ? "scale(1.1)" : "scale(1)",
-        transition: "0.2s"
-      }}
-    />
-  ))}
-</div>
-
-      <div>
-        {colors.map(c => (
-          <div key={c.id} style={{ backgroundColor: c.hex_value, width: 50, height: 50 }} onClick={() => setColorId(c.id)} />
-        ))}
-      </div>
-
+      <input placeholder="Nome" value={name} onChange={e => setName(e.target.value)} />
+      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+      <input type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} />
       <button onClick={register}>Finalizar</button>
     </div>
   );
