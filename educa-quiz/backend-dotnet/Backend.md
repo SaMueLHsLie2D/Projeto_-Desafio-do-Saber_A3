@@ -125,11 +125,11 @@ Notas: a maior parte dos endpoints usa prefixo `api/` conforme rotas definidas n
 
 ## Onde olhar no código
 
-- Controllers principais: [Controllers/](Controllers)
-- DTOs: [DTOs/](DTOs)
-- Models: [Models/](Models)
-- DbContext: [Data/AppDbContext.cs](Data/AppDbContext.cs)
-- Serviços: [Services/TokenService.cs](Services/TokenService.cs), [Services/AvatarSeedService.cs](Services/AvatarSeedService.cs)
+- Controllers principais: [Controllers/](educa-quiz/backend-dotnet/Controllers)
+- DTOs: [DTOs/](educa-quiz/backend-dotnet/DTOs)
+- Models: [Models/](educa-quiz/backend-dotnet/Models)
+- DbContext: [Data/AppDbContext.cs](educa-quiz/backend-dotnet/Data/AppDbContext.cs)
+- Serviços: [Services/TokenService.cs](educa-quiz/backend-dotnet/Services/TokenService.cs), [Services/AvatarSeedService.cs](educa-quiz/backend-dotnet/Services/AvatarSeedService.cs)
 
 ---
 
