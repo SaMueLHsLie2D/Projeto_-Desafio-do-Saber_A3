@@ -59,6 +59,7 @@ CREATE TABLE avatars (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100),
   image_url VARCHAR(255)
+  RequiredValue INT NOT 
 );
 ```
 
@@ -71,6 +72,7 @@ CREATE TABLE colors (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50),
   hex_value VARCHAR(20)
+  RequiredValue INT NOT 
 );
 ```
 
@@ -174,10 +176,10 @@ CREATE TABLE leaderboard (
 ### 🎨 Avatares
 
 ```sql
-INSERT INTO avatars (name, image_url) VALUES
-('Avatar Ninja', '/avatars/avatar1.png'),
-('Avatar Robô', '/avatars/avatar2.png'),
-('Avatar Cavaleiro', '/avatars/avatar3.png');
+INSERT INTO avatars (name, image_url, RequiredValue) VALUES
+('Avatar Ninja', '/avatars/avatar1.png', 100),
+('Avatar Robô', '/avatars/avatar2.png', 200),
+('Avatar Cavaleiro', '/avatars/avatar3.png', 300);
 ```
 
 ---
@@ -185,10 +187,10 @@ INSERT INTO avatars (name, image_url) VALUES
 ### 🌈 Cores
 
 ```sql
-INSERT INTO colors (name, hex_value) VALUES
-('Vermelho', '#FF5733'),
-('Azul', '#3498DB'),
-('Verde', '#2ECC71');
+INSERT INTO colors (name, hex_value, RequiredValue) VALUES
+('Vermelho', '#FF5733', 100),
+('Azul', '#3498DB', 200),
+('Verde', '#2ECC71', 300);
 ```
 
 ---
