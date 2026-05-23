@@ -11,6 +11,7 @@ using System.Security.Claims;
 
 namespace backend_dotnet.Controllers;
 
+[Authorize]                          // ← protege todos os endpoints por padrão
 [ApiController]
 [Route("api/quiz")]
 public class QuizController : ControllerBase
@@ -22,7 +23,6 @@ public class QuizController : ControllerBase
         _context = context;
     }
 
-    // LISTAR TODOS
     [HttpGet]
     public IActionResult GetAll()
     {
@@ -42,7 +42,6 @@ public class QuizController : ControllerBase
             return NotFound("Quiz não encontrado.");
         }
 
-        // Converte a string JSON de volta para uma lista de perguntas
         var questions = JsonSerializer.Deserialize<List<QuestionDto>>(quiz.Questions, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (questions == null || questions.Count == 0)
@@ -60,18 +59,15 @@ public class QuizController : ControllerBase
         });
     }
 
-    [Authorize] // garante que só usuários logados acessam
     [HttpPut("pontos")]
     public async Task<IActionResult> SaveQuizPoints([FromBody] QuizPointsDto dto)
     {
-        // Recupera o ID do usuário a partir do token JWT
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
         if (userIdClaim == null) return Unauthorized();
 
         int userId = int.Parse(userIdClaim.Value);
 
-        // Agora você usa esse userId em vez de receber pelo body
         var attempt = new Attempt
         {
             UserId = userId,
@@ -102,63 +98,54 @@ public class QuizController : ControllerBase
         return Ok(new { message = "Pontuação salva com sucesso!", totalScore = leaderboard.TotalScore });
     }
 
-
-        [Authorize]
-        [HttpPost("reciclagempontos")]
-        public async Task<IActionResult> AddRecyclePoints([FromBody] ScoreRequest request)
+    [HttpPost("reciclagempontos")]
+    public async Task<IActionResult> AddRecyclePoints([FromBody] ScoreRequest request)
+    {
+        if (request == null || request.score < 0)
         {
-            // Valida o request
-            if (request == null || request.score < 0)
-            {
-                return BadRequest(new { message = "Score inválido" });
-            }
- 
-            // Extrai o userId do JWT token
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-            {
-                return Unauthorized(new { message = "Usuário não identificado" });
-            }
- 
-            try
-            {
-                // Busca ou cria o registro do usuário no Leaderboard
-                var leaderboard = await _context.Leaderboards
-                    .FirstOrDefaultAsync(l => l.UserId == userId);
- 
-                if (leaderboard == null)
-                {
-                    // Se não existir, cria um novo
-                    leaderboard = new Leaderboard
-                    {
-                        UserId = userId,
-                        TotalScore = request.score
-                    };
-                    _context.Leaderboards.Add(leaderboard);
-                }
-                else
-                {
-                    // Se existir, adiciona os pontos
-                    leaderboard.TotalScore += request.score;
-                }
- 
-                await _context.SaveChangesAsync();
- 
-                return Ok(new
-                {
-                    message = "Pontos adicionados com sucesso",
-                    totalScore = leaderboard.TotalScore,
-                    pointsAdded = request.score
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Erro ao salvar pontos", error = ex.Message });
-            }
+            return BadRequest(new { message = "Score inválido" });
         }
-    
 
-    // CRIAR QUIZ
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+        {
+            return Unauthorized(new { message = "Usuário não identificado" });
+        }
+
+        try
+        {
+            var leaderboard = await _context.Leaderboards
+                .FirstOrDefaultAsync(l => l.UserId == userId);
+
+            if (leaderboard == null)
+            {
+                leaderboard = new Leaderboard
+                {
+                    UserId = userId,
+                    TotalScore = request.score
+                };
+                _context.Leaderboards.Add(leaderboard);
+            }
+            else
+            {
+                leaderboard.TotalScore += request.score;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Pontos adicionados com sucesso",
+                totalScore = leaderboard.TotalScore,
+                pointsAdded = request.score
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro ao salvar pontos", error = ex.Message });
+        }
+    }
+
     [HttpPost]
     public IActionResult Create(CreateQuizDto dto)
     {
@@ -181,4 +168,3 @@ public class QuizController : ControllerBase
         return Ok(quiz);
     }
 }
-

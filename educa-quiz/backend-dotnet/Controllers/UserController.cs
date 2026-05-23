@@ -14,6 +14,7 @@ using backend_dotnet.Services;
 
 namespace backend_dotnet.Controllers
 {
+    [Authorize]                          // ← protege todos os endpoints por padrão
     [ApiController]
     [Route("api/[controller]")]
     public class UserController(AppDbContext context, TokenService tokenService) : ControllerBase
@@ -21,6 +22,7 @@ namespace backend_dotnet.Controllers
         public readonly AppDbContext _context = context;
         private readonly TokenService _tokenService = tokenService;
 
+        [AllowAnonymous]                 // ← exceção: rota pública
         [HttpPost("Cadastro")]
         public async Task<IActionResult> Cadastro(CadastroDto dto)
         {
@@ -38,7 +40,7 @@ namespace backend_dotnet.Controllers
                 Name = dto.Name,
                 Email = dto.Email,
                 Password = senhaHash,
-                AvatarId = 1, // Definindo um avatar padrão (pode ser alterado posteriormente)
+                AvatarId = 1,
                 ColorId = 1
             };
             _context.Users.Add(user);
@@ -47,6 +49,7 @@ namespace backend_dotnet.Controllers
             return Ok(new { message = "Usuário cadastrado com sucesso!" });
         }
 
+        [AllowAnonymous]                 // ← exceção: rota pública
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
@@ -58,7 +61,6 @@ namespace backend_dotnet.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
                 return Unauthorized("Usuário ou senha inválidos.");
 
-            // ✅ Busca o total de pontos do leaderboard, não de uma tentativa
             var leaderboard = await _context.Leaderboards.FirstOrDefaultAsync(l => l.UserId == user.Id);
             var totalScore = leaderboard?.TotalScore ?? 0;
 
@@ -74,18 +76,15 @@ namespace backend_dotnet.Controllers
                 Name = user.Name,
                 Avatar = avatarUrl,
                 Color = user.Color?.HexValue ?? "#000000",
-                Score = totalScore  // ✅ score real
+                Score = totalScore
             });
         }
 
-        // ✅ Endpoint novo — GET /api/user/perfil
-        [Authorize]
         [HttpGet("perfil")]
         public async Task<IActionResult> GetPerfil()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
-
             int userId = int.Parse(userIdClaim.Value);
 
             var user = await _context.Users
@@ -102,18 +101,26 @@ namespace backend_dotnet.Controllers
                 ? $"{Request.Scheme}://{Request.Host}{user.Avatar.ImageUrl}"
                 : "";
 
+            int totalScore = leaderboard?.TotalScore ?? 0;
+            int unlockedAvatars = await _context.Avatars
+                .CountAsync(a => a.RequiredValue <= totalScore);
+            int unlockedBackgrounds = await _context.Colors
+                .CountAsync(c => c.RequiredValue <= totalScore);
+
             return Ok(new
             {
                 name = user.Name,
+                email = user.Email,
                 avatar = avatarUrl,
                 color = user.Color?.HexValue ?? "#000000",
-                score = leaderboard?.TotalScore ?? 0,
+                score = totalScore,
                 avatarId = user.AvatarId,
-                colorId = user.ColorId
+                colorId = user.ColorId,
+                unlockedAvatars,
+                unlockedBackgrounds
             });
         }
 
-        [Authorize]
         [HttpPut("perfil/avatar")]
         public async Task<IActionResult> EquiparAvatar([FromBody] EquiparAvatarDto dto)
         {
@@ -124,7 +131,6 @@ namespace backend_dotnet.Controllers
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound();
 
-            // Verifica se o avatar existe e se o usuário tem pontos suficientes
             var avatar = await _context.Avatars.FindAsync(dto.AvatarId);
             if (avatar == null) return NotFound("Avatar não encontrado.");
 
@@ -140,7 +146,6 @@ namespace backend_dotnet.Controllers
             return Ok(new { message = "Avatar equipado com sucesso!" });
         }
 
-        [Authorize]
         [HttpPut("perfil/color")]
         public async Task<IActionResult> EquiparColor([FromBody] EquiparColorDto dto)
         {
@@ -167,10 +172,8 @@ namespace backend_dotnet.Controllers
         }
 
         [HttpGet("stats")]
-        [Authorize]
         public async Task<IActionResult> GetUserStats()
         {
-            // Pega o userId do token JWT
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             int userId = int.Parse(userIdClaim.Value);
@@ -193,75 +196,106 @@ namespace backend_dotnet.Controllers
             });
         }
 
-        [Authorize]
         [HttpGet("proxima-conquista")]
         public async Task<IActionResult> GetNextUnlock()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             int userId = int.Parse(userIdClaim.Value);
- 
-            // Busca o score total do usuário
+
             var leaderboard = await _context.Leaderboards
                .FirstOrDefaultAsync(l => l.UserId == userId);
             int totalScore = leaderboard?.TotalScore ?? 0;
- 
-            // Busca todos os avatares e cores ainda NÃO desbloqueados
-        var nextAvatars = await _context.Avatars
-            .Where(a => a.RequiredValue > totalScore)
-            .OrderBy(a => a.RequiredValue)
-            .Select(a => new { 
-                type = "avatar",
-                name = a.Name,
-                requiredValue = a.RequiredValue,
-                currentScore = totalScore
-          })
-          .ToListAsync();
- 
-        var nextColors = await _context.Colors
-            .Where(c => c.RequiredValue > totalScore)
-            .OrderBy(c => c.RequiredValue)
-            .Select(c => new { 
-                type = "color",
-                name = c.Name,
-                requiredValue = c.RequiredValue,
-                currentScore = totalScore
-          })
-          .ToListAsync();
- 
-       // Combina e ordena os dois por RequiredValue (o MENOR é o próximo)
-        var allNext = nextAvatars.Cast<dynamic>().Concat(nextColors.Cast<dynamic>())
-            .OrderBy(x => x.requiredValue)
-            .FirstOrDefault();
- 
-        if (allNext == null)
-        {
-        // Usuário desbloqueou tudo!
-            return Ok(new 
-            { 
-                type = "complete",
-                message = "Você desbloqueou todas as personalizações!",
-                currentScore = totalScore,
-                targetScore = totalScore
+
+            var nextAvatars = await _context.Avatars
+                .Where(a => a.RequiredValue > totalScore)
+                .OrderBy(a => a.RequiredValue)
+                .Select(a => new {
+                    type = "avatar",
+                    name = a.Name,
+                    requiredValue = a.RequiredValue,
+                    currentScore = totalScore
+                })
+                .ToListAsync();
+
+            var nextColors = await _context.Colors
+                .Where(c => c.RequiredValue > totalScore)
+                .OrderBy(c => c.RequiredValue)
+                .Select(c => new {
+                    type = "color",
+                    name = c.Name,
+                    requiredValue = c.RequiredValue,
+                    currentScore = totalScore
+                })
+                .ToListAsync();
+
+            var allNext = nextAvatars.Cast<dynamic>().Concat(nextColors.Cast<dynamic>())
+                .OrderBy(x => x.requiredValue)
+                .FirstOrDefault();
+
+            if (allNext == null)
+            {
+                return Ok(new
+                {
+                    type = "complete",
+                    message = "Você desbloqueou todas as personalizações!",
+                    currentScore = totalScore,
+                    targetScore = totalScore
+                });
+            }
+
+            return Ok(new
+            {
+                type = allNext.type,
+                name = allNext.name,
+                currentScore = allNext.currentScore,
+                targetScore = allNext.requiredValue,
+                pointsNeeded = allNext.requiredValue - allNext.currentScore
             });
         }
- 
-        return Ok(new 
-        { 
-            type = allNext.type,
-            name = allNext.name,
-            currentScore = allNext.currentScore,
-            targetScore = allNext.requiredValue,
-            pointsNeeded = allNext.requiredValue - allNext.currentScore
-        });
-  }
- 
 
-        [Authorize]
+        [HttpPut("perfil")]
+        public async Task<IActionResult> UpdatePerfil([FromBody] UpdatePerfilDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            int userId = int.Parse(userIdClaim.Value);
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(dto.Name))
+                user.Name = dto.Name;
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+                bool emailTaken = await _context.Users
+                    .AnyAsync(u => u.Email == dto.Email && u.Id != userId);
+                if (emailTaken)
+                    return BadRequest(new { message = "Este e-mail já está em uso." });
+                user.Email = dto.Email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+                    return BadRequest(new { message = "Senha atual é obrigatória para alterar a senha." });
+
+                if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.Password))
+                    return BadRequest(new { message = "Senha atual incorreta." });
+
+                user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
+
+            user.UpdateAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { name = user.Name, email = user.Email });
+        }
+
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            // O token expira naturalmente. O frontend já removeu do localStorage.
             return Ok(new { message = "Logout realizado com sucesso." });
         }
     }

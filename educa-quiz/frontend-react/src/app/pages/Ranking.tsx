@@ -2,178 +2,380 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../UserContext';
 import { motion } from 'motion/react';
-import { Home, Trophy, Zap } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Home, Trophy } from 'lucide-react';
+import { API_URL } from '../../services/api';
 
 interface RankingEntry {
-  name: string;
-  energy: number;
   position: number;
+  name: string;
+  totalScore: number;   // API retorna "totalScore" (camelCase do C# TotalScore)
+  avatar?: string | null;
+  isCurrentUser?: boolean;
 }
+
+interface CurrentUserRank {
+  position: number;
+  name: string;
+  totalScore: number;
+  avatar?: string | null;
+}
+
+interface PerfilData {
+  name: string;
+  avatar: string;
+  color: string;
+  score: number;
+}
+
+// — mesmas funções de cor da Home —
+function hexToHarmoniousGradient(hex: string): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+  let h = 0;
+  if (delta !== 0) {
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+  }
+  h = Math.round(h * 60); if (h < 0) h += 360;
+  const l = (max + min) / 2;
+  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  const sP = Math.round(s * 100), lP = Math.round(l * 100);
+  return `linear-gradient(135deg, hsl(${h},${sP}%,${Math.min(lP + 10, 80)}%) 0%, hsl(${(h + 20) % 360},${Math.min(sP + 5, 100)}%,${Math.min(lP + 22, 88)}%) 50%, hsl(${(h + 40) % 360},${Math.max(sP - 10, 30)}%,${Math.min(lP + 35, 94)}%) 100%)`;
+}
+
+function hexToSoftColor(hex: string): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+  let h = 0;
+  if (delta !== 0) {
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+  }
+  h = Math.round(h * 60); if (h < 0) h += 360;
+  const l = (max + min) / 2;
+  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  return `hsl(${h}, ${Math.round(Math.min(s * 100, 60))}%, ${Math.max(Math.min(Math.round(l * 100), 52), 42)}%)`;
+}
+
+function hexToLightBg(hex: string): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+  let h = 0;
+  if (delta !== 0) {
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+  }
+  h = Math.round(h * 60); if (h < 0) h += 360;
+  const l = (max + min) / 2;
+  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  return `hsl(${h}, ${Math.round(Math.min(s * 100, 40))}%, 93%)`;
+}
+
+const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 export default function Ranking() {
   const { user } = useUser();
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
+  const [currentUserRank, setCurrentUserRank] = useState<CurrentUserRank | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [perfil, setPerfil] = useState<PerfilData | null>(null);
 
   useEffect(() => {
-    // Ranking simulado. Em produção, estes dados viriam de um backend.
-    const mockRankings: RankingEntry[] = [
-      { name: user.name, energy: user.energy, position: 0 },
-      { name: 'Ana Silva', energy: 150, position: 0 },
-      { name: 'João Pedro', energy: 120, position: 0 },
-      { name: 'Maria Eduarda', energy: 100, position: 0 },
-      { name: 'Lucas Santos', energy: 80, position: 0 },
-    ];
+    const token = localStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
 
-    const sorted = [...mockRankings].sort((a, b) => b.energy - a.energy);
-    const withPositions = sorted.map((entry, index) => ({
-      ...entry,
-      position: index + 1,
-    }));
+    const fetchAll = async () => {
+      try {
+        const [rankRes, perfilRes] = await Promise.all([
+          fetch(`${API_URL}/ranking`, { headers }),
+          fetch(`${API_URL}/user/perfil`, { headers }),
+        ]);
 
-    setRankings(withPositions);
-  }, [user]);
+        if (!rankRes.ok) throw new Error();
+        const rankData = await rankRes.json();
+        setRankings(rankData.top5 ?? []);
+        setCurrentUserRank(rankData.currentUser ?? null);
 
-  const getMedalEmoji = (position: number) => {
-    switch (position) {
-      case 1:
-        return '🥇';
-      case 2:
-        return '🥈';
-      case 3:
-        return '🥉';
-      default:
-        return `${position}º`;
-    }
+        if (perfilRes.ok) {
+          const p: PerfilData = await perfilRes.json();
+          setPerfil(p);
+          // aplica gradiente de fundo igual à Home
+          const root = document.getElementById('root');
+          if (root && p.color) {
+            root.style.background = hexToHarmoniousGradient(p.color);
+            root.style.minHeight = '100vh';
+          }
+        }
+      } catch {
+        setError('Não foi possível carregar o ranking. Tente novamente mais tarde.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, []);
+
+  const accentColor = perfil?.color ? hexToSoftColor(perfil.color) : '#7c3aed';
+  const lightBg = perfil?.color ? hexToLightBg(perfil.color) : '#f3f0ff';
+  const avatarBg = perfil?.color ?? '#6c47ff';
+  const displayName = perfil?.name || user.name || 'Você';
+  const totalPoints = perfil?.score ?? user.totalPoints ?? 0;
+
+  // Garante URL absoluta para avatares (caso a API retorne caminho relativo)
+  const resolveAvatar = (url?: string | null) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${API_URL.replace('/api', '')}${url}`;
   };
 
-  const backgroundClass = user.selectedBackground
-    ? `min-h-screen bg-gradient-to-br ${user.selectedBackground} flex items-center justify-center p-4`
-    : 'min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center p-4';
+  // estilo de cada linha do ranking
+  const rowBg = (entry: RankingEntry, isCurrentUser: boolean) => {
+    if (isCurrentUser) return lightBg;
+    if (entry.position === 1) return '#fffbeb';  // amarelo suave
+    if (entry.position === 2) return '#f8fafc';  // cinza clarinho
+    if (entry.position === 3) return '#fff7ed';  // laranja suave
+    return '#ffffff';
+  };
 
-  // Busca a posição atual do usuário no ranking para exibir um resumo
-  const currentUserRank = rankings.find((entry) => entry.name === user.name);
+  const rowBorder = (entry: RankingEntry, isCurrentUser: boolean) => {
+    if (isCurrentUser) return `2px solid ${accentColor}`;
+    if (entry.position === 1) return '2px solid #fbbf24';
+    if (entry.position === 2) return '2px solid #cbd5e1';
+    if (entry.position === 3) return '2px solid #fdba74';
+    return '1.5px solid #f1f5f9';
+  };
 
   return (
-    <div className={backgroundClass}>
-      <div className="main-box ranking-container page-card">
-        <div className="flex flex-col gap-4 md:flex-row justify-between items-start md:items-center mb-6">
-          <Link to="/home" className="inline-block">
-            <Button variant="outline" className="bg-white">
-              <Home className="size-4 mr-2" />
-              Voltar ao Menu
-            </Button>
-          </Link>
-          <div className="ranking-points-badge bg-white rounded-full px-5 py-3 shadow-lg text-orange-500 font-bold">
-            ⭐ {user.totalPoints} pontos
-          </div>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative gap-0">
+
+      {/* ── BOTÃO VOLTAR — alinhado com o card ── */}
+      <div style={{ width: '100%', maxWidth: '900px', marginBottom: '12px', display: 'flex' }}>
+        <Link to="/home">
+          <button
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(255,255,255,0.92)',
+              border: 'none',
+              borderRadius: '16px', padding: '10px 20px',
+              fontWeight: 700, fontSize: '14px', color: '#374151',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
+              backdropFilter: 'blur(10px)',
+              letterSpacing: '0.01em',
+            }}
+          >
+            <Home size={16} /> Voltar ao Menu
+          </button>
+        </Link>
+      </div>
+
+      {/* ── CARD PRINCIPAL ── */}
+      <div className="main-box" style={{ width: '100%', maxWidth: '900px' }}>
+
+        {/* Cabeçalho dentro do card — só título + ícone */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <motion.div
+            initial={{ y: -16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+          >
+            <Trophy size={30} color={accentColor} />
+            <h1 style={{ fontSize: '28px', fontWeight: 900, color: accentColor, margin: 0 }}>
+              Ranking
+            </h1>
+          </motion.div>
         </div>
 
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="ranking-header text-center mb-8"
-        >
-          <div className="ranking-title-card mx-auto mb-4">
-            <Trophy className="size-16 text-white" />
+        {/* Estados de loading / erro */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontSize: '15px' }}>
+            ⏳ Carregando ranking...
           </div>
-          <h1 className="page-title text-white">
-            Melhores Jogadores
-          </h1>
-          <p className="page-subtitle text-white/85">Desbloqueie energia ao subir no ranking!</p>
-          {currentUserRank && (
-            <div className="ranking-summary mt-5 bg-white/20 border border-white/30 rounded-3xl p-4 inline-flex items-center justify-center gap-3 text-white text-base font-semibold">
-              <Zap className="size-5 text-yellow-300 fill-yellow-300" />
-              Você está em <strong>#{currentUserRank.position}</strong> com <strong>{currentUserRank.energy}</strong> energia
-            </div>
-          )}
-        </motion.div>
+        )}
+        {!loading && error && (
+          <div style={{
+            textAlign: 'center', padding: '24px',
+            background: '#fef2f2', borderRadius: '16px',
+            color: '#ef4444', fontSize: '14px',
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
 
-        {/* Ranking List */}
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="ranking-card"
-        >
-          {/* Rankings */}
-          <div className="p-6 space-y-4">
+        {/* Lista do ranking */}
+        {!loading && !error && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {rankings.map((entry, index) => {
-              const isCurrentUser = entry.name === user.name;
-              const rankStyle = isCurrentUser
-                ? 'ranking-entry-current'
-                : entry.position === 1
-                ? 'ranking-entry-gold'
-                : entry.position === 2
-                ? 'ranking-entry-silver'
-                : entry.position === 3
-                ? 'ranking-entry-bronze'
-                : 'bg-white';
+              const isCurrentUser = entry.isCurrentUser ?? entry.name === (perfil?.name || user.name);
+              const initials = entry.name.charAt(0).toUpperCase();
 
               return (
                 <motion.div
                   key={`${entry.name}-${entry.position}`}
-                  initial={{ x: -50, opacity: 0 }}
+                  initial={{ x: -30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`ranking-entry relative flex flex-wrap items-center gap-4 p-6 ${rankStyle}`}
+                  transition={{ delay: index * 0.07 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '14px',
+                    padding: '14px 18px',
+                    background: rowBg(entry, isCurrentUser),
+                    border: rowBorder(entry, isCurrentUser),
+                    borderRadius: '20px',
+                    boxShadow: isCurrentUser
+                      ? `0 4px 16px ${accentColor}22`
+                      : '0 1px 4px rgba(0,0,0,0.05)',
+                  }}
                 >
-                  {/* Position */}
-                  <div className="ranking-position text-4xl font-black w-20 text-center">
-                    {getMedalEmoji(entry.position)}
+                  {/* Posição / medalha */}
+                  <div style={{
+                    width: '40px', textAlign: 'center', flexShrink: 0,
+                    fontSize: entry.position <= 3 ? '24px' : '15px',
+                    fontWeight: 800,
+                    color: entry.position <= 3 ? undefined : '#9ca3af',
+                  }}>
+                    {MEDAL[entry.position] ?? `${entry.position}º`}
                   </div>
 
-                  {/* Name */}
-                  <div className="flex-1">
-                    <h3 className={`text-2xl font-bold ${isCurrentUser ? 'text-purple-700' : 'text-gray-800'}`}>
-                      {entry.name} {isCurrentUser && '(Você)'}
-                    </h3>
+                  {/* Avatar */}
+                  {resolveAvatar(entry.avatar) ? (
+                    <img
+                      src={resolveAvatar(entry.avatar)!}
+                      alt={entry.name}
+                      style={{
+                        width: '44px', height: '44px', borderRadius: '50%',
+                        objectFit: 'cover', flexShrink: 0,
+                        border: isCurrentUser ? `2px solid ${accentColor}` : '2px solid #e5e7eb',
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '50%',
+                      background: isCurrentUser ? accentColor : avatarBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontWeight: 800, fontSize: '18px', flexShrink: 0,
+                      border: isCurrentUser ? `2px solid ${accentColor}` : '2px solid transparent',
+                    }}>
+                      {initials}
+                    </div>
+                  )}
+
+                  {/* Nome */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      margin: 0, fontWeight: 700, fontSize: '15px',
+                      color: isCurrentUser ? accentColor : '#1f2937',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {entry.name}
+                      {isCurrentUser && (
+                        <span style={{
+                          marginLeft: '8px', fontSize: '11px', fontWeight: 700,
+                          background: accentColor, color: 'white',
+                          borderRadius: '999px', padding: '2px 8px',
+                        }}>
+                          Você
+                        </span>
+                      )}
+                    </p>
                   </div>
 
-                  {/* Energy */}
-                  <div className="ranking-energy flex items-center gap-2 bg-white rounded-full px-6 py-3 shadow-lg">
-                    <Zap className="size-6 text-yellow-500 fill-yellow-500" />
-                    <span className="text-2xl font-black text-orange-500">{entry.energy}</span>
+                  {/* Pontuação */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '5px',
+                    background: 'white', borderRadius: '999px',
+                    padding: '6px 14px',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+                    flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: '16px' }}>⭐</span>
+                    <span style={{ fontWeight: 800, fontSize: '15px', color: accentColor }}>
+                      {entry.totalScore} pts
+                    </span>
                   </div>
                 </motion.div>
               );
             })}
-          </div>
 
-          {/* Info */}
-          <div className="ranking-footer bg-white p-6 text-center border-t border-gray-200 rounded-b-3xl">
-            <p className="text-lg text-gray-700">
-              <strong>Como funciona:</strong> A cada resposta correta, você ganha 10 de energia <Zap className="inline size-5 text-yellow-500 fill-yellow-500" />
-            </p>
-            <p className="text-md text-gray-600 mt-2">
-              Continue jogando para subir no ranking!
-            </p>
+            {rankings.length === 0 && (
+              <p style={{ textAlign: 'center', color: '#9ca3af', padding: '32px 0' }}>
+                Nenhum jogador no ranking ainda.
+              </p>
+            )}
           </div>
-        </motion.div>
+        )}
 
-        {/* User Stats */}
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 stats-card"
-        >
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800">Suas Estatísticas</h3>
+        {/* Rodapé informativo */}
+        {!loading && !error && (
+          <div style={{
+            marginTop: '20px', padding: '14px 18px',
+            background: '#f9fafb', borderRadius: '16px',
+            borderTop: '1.5px solid #f1f5f9',
+            textAlign: 'center',
+          }}>
+            <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>
+              <strong>Como funciona:</strong> a cada resposta correta você ganha pontos ⭐ — continue jogando para subir no ranking!
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="stat-card bg-gradient-to-br from-orange-100 to-yellow-100 rounded-3xl p-6">
-              <div className="text-5xl mb-2">⭐</div>
-              <div className="text-3xl font-black text-orange-600">{user.totalPoints}</div>
-              <div className="text-lg text-gray-700">Pontos</div>
-            </div>
-            <div className="stat-card bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl p-6">
-              <Zap className="size-12 mx-auto mb-2 text-yellow-500 fill-yellow-500" />
-              <div className="text-3xl font-black text-orange-600">{user.energy}</div>
-              <div className="text-lg text-gray-700">Energia</div>
-            </div>
-          </div>
-        </motion.div>
+        )}
       </div>
+
+      {/* ── CARD SUAS ESTATÍSTICAS ── */}
+      <motion.div
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        style={{
+          width: '100%', maxWidth: '900px',
+          margin: '20px auto 0 auto',
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(15px)',
+          borderRadius: '30px',
+          padding: '18px 35px',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+        }}
+      >
+        <h3 style={{ fontWeight: 700, fontSize: '15px', color: accentColor, marginBottom: '14px' }}>
+          Suas Estatísticas
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{
+            background: lightBg, borderRadius: '20px',
+            padding: '18px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '4px' }}>⭐</div>
+            <div style={{ fontSize: '26px', fontWeight: 900, color: accentColor }}>{totalPoints}</div>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Pontos</div>
+          </div>
+          <div style={{
+            background: lightBg, borderRadius: '20px',
+            padding: '18px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '4px' }}>🏆</div>
+            <div style={{ fontSize: '26px', fontWeight: 900, color: accentColor }}>
+              {currentUserRank ? `#${currentUserRank.position}` : '–'}
+            </div>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Posição</div>
+          </div>
+        </div>
+      </motion.div>
+
     </div>
   );
 }

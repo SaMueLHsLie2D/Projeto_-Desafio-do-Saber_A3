@@ -1,11 +1,8 @@
 ﻿.profile-page {
   min-height: 100vh;
   padding: 2rem 1.5rem;
-  background: radial-gradient(circle at top left, rgba(192, 132, 252, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(96, 165, 250, 0.18), transparent 20%),
-    #f8fafc;
+  background: transparent;
 }
-
 .profile-container {
   max-width: 1180px;
   margin: 0 auto;

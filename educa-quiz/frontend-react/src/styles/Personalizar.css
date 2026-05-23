@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+.ps-root {
+  min-height: 100vh;
+  background: transparent;
+  font-family: 'Nunito', sans-serif;
+  padding: 0 0 60px;
+  color: #333;
+}
+
+.ps-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: rgba(0,0,0,0.4);
+}
+
+/* ── Header ── */
+.ps-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px 0;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.ps-back {
+  background: rgba(255,255,255,0.6);
+  border: 1.5px solid rgba(0,0,0,0.15);
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ps-back:hover { background: rgba(255,255,255,0.85); }
+
+.ps-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 26px;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* ── Card de perfil ── */
+.ps-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 20px;
+  padding: 20px 24px;
+  max-width: 760px;
+  margin: 20px auto 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.ps-av-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ps-av-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,0.6);
+  background: #e9e3ff;
+  display: block;
+}
+
+
+
+.ps-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ps-profile-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 22px;
+  color: #333;
+}
+
+.ps-profile-score {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ps-profile-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.4);
+  font-weight: 600;
+}
+
+/* ── Tabs ── */
+.ps-tabs {
+  display: flex;
+  gap: 8px;
+  max-width: 760px;
+  margin: 24px auto 0;
+  padding: 0 0 0 2px;
+}
+
+.ps-tab {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.5);
+  color: rgba(0,0,0,0.45);
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.ps-tab:hover { background: rgba(255,255,255,0.75); }
+
+.ps-tab--active {
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+
+/* ── Grid ── */
+.ps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 760px;
+  margin: 20px auto 0;
+}
+
+/* ── Item ── */
+.ps-item {
+  position: relative;
+  border-radius: 16px;
+  border: 2px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px 12px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  min-height: 140px;
+  justify-content: center;
+}
+
+.ps-item--unlocked:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  border-color: rgba(0,0,0,0.18);
+}
+
+.ps-item--locked {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.ps-item-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Swatch de cor */
+.ps-color-swatch {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.6);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* Lock */
+.ps-item-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-lock-icon { font-size: 28px; opacity: 0.5; }
+
+.ps-lock-pts {
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(0,0,0,0.06);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.ps-item-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.6);
+  text-align: center;
+}
+
+/* Check de selecionado */
+.ps-check {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 600px) {
+  .ps-grid { grid-template-columns: repeat(2, 1fr); }
+  .ps-header, .ps-profile-card, .ps-tabs, .ps-grid { padding-left: 16px; padding-right: 16px; }
+}
