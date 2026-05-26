@@ -191,10 +191,9 @@ fetch(`${API_URL}/quiz/reciclagempontos`, {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="main-box">
           <Link to="/home" className="inline-block mb-6">
-            <Button variant="outline" className="bg-white">
-              <Home className="size-4 mr-2" />
-              Voltar ao Menu
-            </Button>
+            <button type="button" className="back-button">
+              ← Voltar
+            </button>
           </Link>
 
           <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-8">

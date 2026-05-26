@@ -164,30 +164,14 @@ export default function Ranking() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative gap-0">
-
-      {/* ── BOTÃO VOLTAR — alinhado com o card ── */}
-      <div style={{ width: '100%', maxWidth: '900px', marginBottom: '12px', display: 'flex' }}>
-        <Link to="/home">
-          <button
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              background: 'rgba(255,255,255,0.92)',
-              border: 'none',
-              borderRadius: '16px', padding: '10px 20px',
-              fontWeight: 700, fontSize: '14px', color: '#374151',
-              cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
-              backdropFilter: 'blur(10px)',
-              letterSpacing: '0.01em',
-            }}
-          >
-            <Home size={16} /> Voltar ao Menu
-          </button>
-        </Link>
-      </div>
-
-      {/* ── CARD PRINCIPAL ── */}
       <div className="main-box" style={{ width: '100%', maxWidth: '900px' }}>
+        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-start' }}>
+          <Link to="/home">
+            <button type="button" className="back-button" style={{ marginBottom: 0 }}>
+              ← Voltar
+            </button>
+          </Link>
+        </div>
 
         {/* Cabeçalho dentro do card — só título + ícone */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>

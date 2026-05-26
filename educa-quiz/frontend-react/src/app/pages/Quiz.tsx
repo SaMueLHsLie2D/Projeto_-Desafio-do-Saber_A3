@@ -242,22 +242,25 @@ export default function Quiz() {
   };
 
   // ── Botão padrão reutilizável ─────────────────────────────────────────────
-  const BtnBack = ({ onClick, label = 'Voltar ao Menu' }: { onClick?: () => void; label?: string }) => (
+  const BtnBack = ({ onClick, label = '← Voltar' }: { onClick?: () => void; label?: string }) => (
     onClick
-      ? <button onClick={onClick} style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: 'white', border: `1.5px solid ${lightBg}`,
-          borderRadius: '12px', padding: '8px 16px',
-          fontWeight: 700, fontSize: '13px', color: accentColor,
-          cursor: 'pointer', marginBottom: '20px',
-        }}><Home size={14} /> {label}</button>
-      : <Link to="/home"><button style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: 'white', border: `1.5px solid ${lightBg}`,
-          borderRadius: '12px', padding: '8px 16px',
-          fontWeight: 700, fontSize: '13px', color: accentColor,
-          cursor: 'pointer', marginBottom: '20px',
-        }}><Home size={14} /> {label}</button></Link>
+      ? <button
+          type="button"
+          onClick={onClick}
+          className="back-button"
+          style={{ marginBottom: '20px' }}
+        >
+          {label}
+        </button>
+      : <Link to="/home">
+          <button
+            type="button"
+            className="back-button"
+            style={{ marginBottom: '20px' }}
+          >
+            {label}
+          </button>
+        </Link>
   );
 
   // ── TELA: escolha de categoria ────────────────────────────────────────────
