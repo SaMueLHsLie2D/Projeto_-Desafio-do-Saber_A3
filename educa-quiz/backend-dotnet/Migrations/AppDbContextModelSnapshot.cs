@@ -167,7 +167,7 @@ namespace backenddotnet.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("LeaderBoards");
+                    b.ToTable("Leaderboards");
                 });
 
             modelBuilder.Entity("backend_dotnet.Models.User", b =>

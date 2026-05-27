@@ -1,0 +1,115 @@
+.card-custom {
+  border-radius: 20px;
+  transition: transform 0.2s;
+}
+
+.card-custom:hover {
+  transform: scale(1.05);
+}
+
+/* Home list card styles */
+.home-list-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: white;
+  padding: 18px 20px;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.home-list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+}
+
+.left-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.icon-svg {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.list-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #4b2fb0;
+  margin: 0 0 6px 0;
+}
+
+.list-desc {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.arrow-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.list-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Additional overrides for better visibility */
+
+.arrow-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* stat pill */
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #ffffff, #fffafc);
+  padding: 10px 16px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  font-size: 14px;
+  font-weight: 800;
+  color: #333;
+}
+
+.stat-pill .star {
+  color: #f59e0b;
+}
+
+.stat-pill .bolt {
+  color: #f97316;
+}
+
+/* subtle card gradient for contrast - override */
+.home-list-card {
+  background: linear-gradient(180deg, #ffffff, #fbfbff);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
